@@ -1,6 +1,8 @@
+import Navbar from '../mods/Navbar/Navbar'
+
 let Index = () => {
   return <>
-    <div className="text-red-500">Hello, world!</div>
+    <Navbar/>
   </>
 }
 
