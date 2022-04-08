@@ -1,38 +1,67 @@
 import Link from 'next/link'
 import { useState } from 'react'
-import { ChevronDownIcon } from '@heroicons/react/solid'
+import { useEffect } from 'react'
 import Logo from './Logo'
 import ProductsButton from './Products/Button'
 import ProductsPage from './Products/Page'
 import EmployeesButton from './Employees/Button'
 import EmployeesPage from './Employees/Page'
+import InvestorsButton from './Investors/Button'
+import ContactButton from './Contact/Button'
+import ApplyButton from './Apply/Button'
 
 let Navbar = props => {
   let [isProductsOpen, setIsProductsOpen] = useState(false)
   let [isEmployeesOpen, setIsEmployeesOpen] = useState(false)
+  let [isScroll, setIsScroll] = useState(false)
 
   let SetProducts = isActive => {
     setIsProductsOpen(isActive);
     setIsEmployeesOpen(false);
+    setIsScroll(false);
   }
 
   let SetEmployees = isActive => {
     setIsProductsOpen(false);
     setIsEmployeesOpen(isActive);
+    setIsScroll(false);
   }
 
+  let SetScroll = isActive => {
+    setIsEmployeesOpen(isEmployeesOpen)
+    setIsProductsOpen(isProductsOpen)
+    setIsScroll(isActive)
+  }
+
+  useEffect(() => {
+    document.body.onscroll = () => {
+      if (window.scrollY > 16) {
+        SetScroll(true);
+      } else {
+        SetScroll(false);
+      }
+    }
+  }, [])
+
   return <>
-    <div className={`flex z-10 shadow py-2 px-4 select-none items-center space-x-12 w-full ${isProductsOpen ? "fixed top-0 left-0": ""}`}>
-      <Link href="/">
-        <a><Logo/></a>
-      </Link>
-      <div className="flex space-x-8">
-        <ProductsButton bool={isProductsOpen} set={SetProducts}/>
-        <EmployeesButton bool={isEmployeesOpen} set={SetEmployees}/>
+    <div className={`flex z-10 py-2 px-4 bg-white select-none shadow fixed items-center transition-all ${isScroll ? "top-4 right-4 left-4 rounded-xl": "top-0 left-0 right-0 rounded-none"}`} id="navbar">
+      <div className="flex w-full">
+        <Link href="/">
+          <a><Logo/></a>
+        </Link>
+        <div className="pl-12 space-x-4 flex w-full">
+          <ProductsButton bool={isProductsOpen} set={SetProducts}/>
+          <EmployeesButton bool={isEmployeesOpen} set={SetEmployees}/>
+          <InvestorsButton/>
+          <ContactButton/>
+        </div>
+      </div>
+      <div className="flex justify-end text-right w-full">
+        <ApplyButton/>
       </div>
     </div>
     <ProductsPage bool={isProductsOpen}/>
-    <EmployeesPage bool={isEmployeesOpen} set={setIsEmployeesOpen}/>
+    <EmployeesPage bool={isEmployeesOpen}/>
   </>
 }
 

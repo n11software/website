@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 let ProductsPage = props => {
-  return props.bool ? <div className="fixed z-0 top-14 left-0 right-0 w-full flex h-full text-gray-800">
+  return props.bool ? <div className="fixed z-0 top-14 left-0 right-0 w-full flex h-full text-gray-800 bg-white">
     <div className="flex flex-col w-1/4 bg-stone-100 p-4">
       <span className="text-md uppercase font-bold mb-8">Featured</span>
       <div className="flex flex-col space-y-2 overflow-y-auto mb-16">
