@@ -57,7 +57,7 @@ let Navbar = props => {
         </div>
       </div>
       <div className="flex justify-end text-right w-full">
-        <ApplyButton/>
+        <ApplyButton type={0}/>
       </div>
     </div>
     <ProductsPage bool={isProductsOpen}/>
