@@ -12,7 +12,7 @@ let Index = () => {
       <div className="flex flex-col text-stone-800 w-full pt-32 pl-24">
         <span className="text-5xl font-black mb-2">Optimized, secure, and modern products.</span>
         <span className="text-2xl w-3/4 text-stone-600 mb-12">N11 is a business focused on creating things from nothing making them secure, fast, and modernized.</span>
-        <ApplyButton type={1}/>
+        <ApplyButton/>
       </div>
       <div className="flex flex-col text-white w-full items-end justify-center pr-24 pt-32 pb-12">
         <img src="/icon.svg" className="rounded-xl h-full shadow bg-white"/>
