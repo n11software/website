@@ -15,10 +15,14 @@ let Index = () => {
         <ApplyButton/>
       </div>
       <div className="flex flex-col text-white w-full items-end justify-center pr-24 pt-32 pb-12">
-        <img src="/icon.svg" className="rounded-xl h-full shadow bg-white"/>
+        <img src="/HeroNuclear.png" className="h-full"/>
       </div>
     </div>
-    <div className="w-screen h-screen flex bg-blue-300"></div>
+    <img src="Waves/White-Black.svg" className="w-full h-48"/>
+    <div className="w-screen flex flex-col bg-black h-screen">
+      <span className="text-5xl font-black text-white pl-32 pt-20"></span>
+    </div>
+    <img src="Waves/Black-White.svg" className="w-full h-48"/>
   </>
 }
 
