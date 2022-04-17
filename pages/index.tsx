@@ -15,7 +15,7 @@ let Index = () => {
         <ApplyButton/>
       </div>
       <div className="flex flex-col text-white w-full items-end justify-center pr-24 pt-32 pb-12">
-        <img src="/HeroNuclear.png" className="h-full"/>
+        <img src="/HeroNuclear.png" className="h-full w-full"/>
       </div>
     </div>
     <img src="Waves/White-Black.svg" className="w-full h-48"/>
