@@ -6,9 +6,9 @@ import ProductsButton from './Products/Button'
 import ProductsPage from './Products/Page'
 import EmployeesButton from './Employees/Button'
 import EmployeesPage from './Employees/Page'
-import InvestorsButton from './Investors/Button'
 import ContactButton from './Contact/Button'
 import ApplyButton from './Apply/Button'
+import DonateButton from './Donate/Button'
 
 let Navbar = props => {
   let [isProductsOpen, setIsProductsOpen] = useState(false)
@@ -52,7 +52,7 @@ let Navbar = props => {
         <div className="pl-12 space-x-4 flex w-full">
           <ProductsButton bool={isProductsOpen} set={SetProducts}/>
           <EmployeesButton bool={isEmployeesOpen} set={SetEmployees}/>
-          <InvestorsButton/>
+          <DonateButton/>
           <ContactButton/>
         </div>
       </div>
