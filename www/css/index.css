@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway&display=swap');
+
+@font-face {
+  font-family: 'SaldaSoft Heavy';
+  src: url("/fonts/saldasoftheavy.otf");
+}
+
+* {
+  margin: 0;
+}
+
+*:not(input[type="text"]) {
+  user-select: none;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.container > input[type="text"] {
+  width: 500px;
+  height: 36px;
+  border: 1px solid #57534e;
+  border-radius: 7px;
+  padding: 0 20px;
+  font-family: 'Raleway', Arial, Helvetica, sans-serif;
+  font-size: large;
+  font-weight: bold;
+  color: #1c1917;
+  outline: 0;
+  transition: box-shadow .15s ease-in-out;
+}
+
+.container > span.logo {
+  font-family: 'SaldaSoft Heavy', sans-serif;
+  font-size: 6rem;
+  margin-bottom: 1rem;
+}
