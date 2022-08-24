@@ -37,6 +37,20 @@ int main() {
     res->SendFile("www/fonts/saldasoftheavy.otf");
   });
 
+  // Search Page
+  Server.Get("/search", [](Request* req, Response* res) {
+    if (req->GetQuery("q") == "") {
+      res->Error(404);
+    } else {
+      res->SetHeader("Content-Type", "text/html; charset=utf-8");
+      if (req->GetQuery("suggestions")=="true") {
+        res->Send("{\"suggestions\":[ \"Hi\", \"Hello\", \"Bye\" ]}");
+      } else {
+        res->SendFile("www/search.html");
+      }
+    }
+  });
+
   std::cout << "Server running on port 3000" << std::endl;
   Server.Start();
   return 0;
