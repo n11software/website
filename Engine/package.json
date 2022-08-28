@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "dom-parser": "^0.1.6"
+  }
+}

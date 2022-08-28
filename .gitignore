@@ -1,3 +1,10 @@
-Build/*
-N11Website
+CMakeFiles/
+build.ninja
+.ninja_deps
+.ninja_log
+cmake_install.cmake
+CMakeCache.txt
 .DS_Store
+
+node_modules
+package-lock.json

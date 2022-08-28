@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Aug 24 05:58:24 2022
+# Make data base, printed on Sat Aug 27 21:37:20 2022
 
 # Variables
 
@@ -115,7 +115,7 @@ LS_COLORS = rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:
 # environment
 LESS = -R
 # environment
-WSL_INTEROP = /run/WSL/11_interop
+WSL_INTEROP = /run/WSL/12_interop
 # 'override' directive
 GNUMAKEFLAGS := 
 # environment
@@ -141,7 +141,7 @@ XDG_RUNTIME_DIR = /mnt/wslg/runtime-dir
 # makefile (from 'Makefile', line 5)
 Directories = $(wildcard Source/*)
 # environment
-VSCODE_IPC_HOOK_CLI = /mnt/wslg/runtime-dir/vscode-ipc-cabedfb8-4c10-4bb0-b140-4db0affc70a9.sock
+VSCODE_IPC_HOOK_CLI = /mnt/wslg/runtime-dir/vscode-ipc-cb46a0f3-623b-48a1-bce8-3c3f1c61977d.sock
 # environment
 VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
 # environment
@@ -171,11 +171,11 @@ rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(
 
 # Directories
 
-# . (device 2080, inode 47440): 9 files, no impossibilities.
+# . (device 2080, inode 47440): 11 files, no impossibilities.
 # Source/main.cpp (device 2080, inode 56268): could not be opened.
 # Source (device 2080, inode 56266): 3 files, no impossibilities.
 
-# 12 files, no impossibilities in 3 directories.
+# 14 files, no impossibilities in 3 directories.
 
 # Implicit Rules
 
@@ -228,12 +228,12 @@ Build/main.o:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 20 / storage = 183 B / avg = 9 B
-# current buf: size = 8162 B / used = 183 B / count = 20 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 22 / storage = 200 B / avg = 9 B
+# current buf: size = 8162 B / used = 200 B / count = 22 / avg = 9 B
 
-# strcache performance: lookups = 28 / hit rate = 28%
+# strcache performance: lookups = 30 / hit rate = 26%
 # hash-table stats:
-# Load=20/8192=0%, Rehash=0, Collisions=0/28=0%
-# Finished Make data base on Wed Aug 24 05:58:24 2022
+# Load=22/8192=0%, Rehash=0, Collisions=0/30=0%
+# Finished Make data base on Sat Aug 27 21:37:20 2022
 
  
