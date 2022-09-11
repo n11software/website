@@ -19,16 +19,17 @@ sql.connect(err => {
 let push = (url, title, description) => {
     sql.query("SELECT * FROM entry WHERE url = ?", [url], function (err, result) {
         if (err) throw err
-        console.log(result)
         if (result.length == 0) {
             sql.query("INSERT INTO entry (url, title, description) VALUES (?, ?, ?)", [url, title, description], function (err, result) {
                 if (err) throw err
-                console.log("1 record inserted")
+                console.log("Added " + url + " to database!")
             })
+            sql.commit()
         } else {
-            console.log("Entry already exists")
+            console.log(url + " already exists!")
         }
     })
+    sql.commit()
 }
 
 let Engine = async url => {
@@ -64,29 +65,32 @@ let Engine = async url => {
 
 
             if (response.headers.get('Content-Type').includes("text/html")) {
-                let dom = parser.parseFromString(text)
-                if (dom.getElementsByTagName('title').length > 0) {
-                    title = dom.getElementsByTagName("title")[0].innerHTML
-                }
-                if (dom.getElementsByName("description").length > 0) {
-                    description = dom.getElementsByName("description")[0].getAttribute("content").substring(0, 256)
-                } else if (dom.getElementsByTagName("p").length > 0) {
-                    let longest = ""
-                    dom.getElementsByTagName("p").forEach(text => {
-                        if (text.innerHTML.length <= 256 && text.innerHTML.length > longest.length) {
-                            longest = text.innerHTML
-                        }
-                    })
-                    description = longest
+                try {
+                    let dom = parser.parseFromString(text)
+                    if (dom.getElementsByTagName('title').length > 0) {
+                        title = dom.getElementsByTagName("title")[0].innerHTML
+                    }
+                    if (dom.getElementsByName("description").length > 0) {
+                        description = dom.getElementsByName("description")[0].getAttribute("content").substring(0, 256)
+                    } else if (dom.getElementsByTagName("p").length > 0) {
+                        let longest = ""
+                        dom.getElementsByTagName("p").forEach(text => {
+                            if (text.innerHTML.length <= 256 && text.innerHTML.length > longest.length) {
+                                longest = text.innerHTML
+                            }
+                        })
+                        description = longest
+                    }
+                } catch (e) {
+                    console.log(e)
                 }
             }
             console.log(title)
             console.log(description)
-            console.log(urls)
             push(url, title, description)
             // if (urls != null) urls.forEach(url => await Engine(url))
         })
     }).catch(()=>{console.log("failed...")})
 }
 
-Engine('https://wikipedia.org')
+Engine('https://github.com')
