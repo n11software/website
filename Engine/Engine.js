@@ -170,6 +170,6 @@ let cycle = () => {
     }
 }
 
-Engine('https://wikipedia.org/').then(()=>{
+Engine(process.argv[2]).then(()=>{
     cycle()
 })
