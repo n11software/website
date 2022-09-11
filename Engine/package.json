@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "dom-parser": "^0.1.6"
+    "dom-parser": "^0.1.6",
+    "mysql": "^2.18.1"
   }
 }
