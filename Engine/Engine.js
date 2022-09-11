@@ -160,7 +160,7 @@ let cycle = () => {
     if (!recents.includes(urls[0])) {
         Engine(urls[0]).then(()=>{
             recents.push(urls[0])
-            if (recents.length > 1000) recents.shift()
+            if (recents.length > 100000) recents.shift()
             urls.shift()
             cycle()
         })
