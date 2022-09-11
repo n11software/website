@@ -3,6 +3,7 @@ let DomParser = require('dom-parser')
 const {execSync} = require('child_process')
 let parser = new DomParser()
 let mysql = require('mysql')
+let crypto = require('crypto')
 require('dotenv').config()
 
 var sql = mysql.createConnection({
@@ -14,33 +15,39 @@ var sql = mysql.createConnection({
 
 sql.connect(err => {
     if (err) throw err
-    console.log("Connected to database!")
+    console.log("Ready...")
 })
 
-let push = (url, title, description) => {
-    sql.query("SELECT * FROM entry WHERE url = ?", [url], function (err, result) {
+let PushSite = (url, title, description, keywords) => {
+    let hash = crypto.createHash('sha256').update(url).digest('hex')
+    let time = new Date().toISOString()
+    sql.query("SELECT * FROM sites WHERE hash = ?", [hash], function (err, result) {
         if (err) throw err
         if (result.length == 0) {
-            sql.query("INSERT INTO entry (url, title, description) VALUES (?, ?, ?)", [url, title, description], function (err, result) {
+            sql.query("INSERT INTO sites (hash, url, title, description, keywords, lang, time, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [hash, url, title, description, keywords, "en", time, time], function (err, result) {
                 if (err) console.log(err)
-                console.log("\x1b[32mAdded " + url + " to database!\x1b[0m")
+                console.log("\x1b[32m" + url + "\x1b[0m")
             })
         } else {
-            console.log("\x1b[34m" + url + " already exists!\x1b[0m")
+            sql.query("UPDATE sites SET title = ?, description = ?, keywords = ?, updated = ? WHERE hash = ?", [title, description, keywords, time, hash], (err, res) => {
+                if (err) console.log(err)
+                console.log("\x1b[34m" + url + "\x1b[0m")
+            })
         }
     })
 }
 let urls = []
 let Engine = async url => {
-    execSync("sleep 0.`25")
+    execSync("sleep 0.25")
     if (!/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(url)) return
-    console.log("Parsing " + url)
     let proto = url.split(':')[0]
     let host = url.split('/')[2]
-    return fetch(url).then(response => {
+    return fetch(url, {headers: {
+        'Accept-Language': 'en;q=0.9, *;q=0.8',
+    }}).then(response => {
         return response.text().then(text => {
             if (text == null) return
-            let title = "", description = ""
+            let title = "", description = "", keywords
             const urlRegDQ = /"(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?"/gi
             const urlRegSQ = /'(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?'/gi
             const urlRegGR = /`(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?`/gi;
@@ -61,34 +68,49 @@ let Engine = async url => {
             while (match = urlRegRel.exec(text)) {
                 urel.push(match[2]);
             }
-            if (urel != null) urel.forEach(url => urls.push(proto + "://" + host + "/" + url))
+            if (urel != null) urel.forEach(url => urls.push(proto + "://" + host + url[url.length-1] == "/"? "": "/" + url))
 
-
-            if (response.headers.get('Content-Type').includes("text/html")) {
+            if (response.ok && response.headers.get('Content-Type').includes("text/html")) {
                 try {
                     let dom = parser.parseFromString(text)
                     if (dom.getElementsByTagName('title').length > 0) {
-                        title = dom.getElementsByTagName("title")[0].innerHTML
+                        title = dom.getElementsByTagName("title")[0].textContent
+                    } else if (dom.getElementsByTagName('h1').length > 0) {
+                        title = dom.getElementsByTagName("h1")[0].textContent
+                    } else if (dom.getElementsByTagName('h2').length > 0) {
+                        title = dom.getElementsByTagName("h2")[0].textContent
+                    } else if (dom.getElementsByTagName('h3').length > 0) {
+                        title = dom.getElementsByTagName("h3")[0].textContent
+                    } else if (dom.getElementsByTagName('h4').length > 0) {
+                        title = dom.getElementsByTagName("h4")[0].textContent
+                    } else if (dom.getElementsByTagName('h5').length > 0) {
+                        title = dom.getElementsByTagName("h5")[0].textContent
+                    } else if (dom.getElementsByTagName('h6').length > 0) {
+                        title = dom.getElementsByTagName("h6")[0].textContent
                     }
                     if (dom.getElementsByName("description").length > 0) {
                         description = dom.getElementsByName("description")[0].getAttribute("content").substring(0, 256)
                     } else if (dom.getElementsByTagName("p").length > 0) {
                         let longest = ""
                         dom.getElementsByTagName("p").forEach(text => {
-                            if (text.innerHTML.length <= 256 && text.innerHTML.length > longest.length) {
-                                longest = text.innerHTML
+                            if (text.textContent.length <= 256 && text.textContent.length > longest.length) {
+                                longest = text.textContent
                             }
                         })
                         description = longest
                     }
+                    if (dom.getElementsByName("keywords").length > 0) {
+                        keywords = dom.getElementsByName("keywords")[0].getAttribute("content")
+                    }
                 } catch (e) {
                     console.log(e)
                 }
+                if (title == "") title = url
+                PushSite(url, title, description, keywords)
             }
-            push(url, title, description)
             return 1
         })
-    }).catch(()=>{console.log("\x1b[31mNot a valid URL!\x1b[0m")})
+    }).catch((e)=>{console.log(console.log("\x1b[31m" + url + "\x1b[0m"))})
 }
 
 let cycle = () => {
@@ -98,6 +120,6 @@ let cycle = () => {
     })
 }
 
-Engine('https://yahoo.com').then(()=>{
+Engine('http://biglistofwebsites.com/').then(()=>{
     cycle()
 })
