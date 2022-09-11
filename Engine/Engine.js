@@ -114,7 +114,8 @@ let Engine = async url => {
         }
         if (urel != null) urel.forEach(url => urls.push(proto + "://" + host + url[url.length-1] == "/"? "": "/" + url))
 
-        if (r.status == 200 && r.headers.get('Content-Type').includes("text/html")) {
+        let contentType = r.headers.get('Content-Type')
+        if (r.status == 200 && contentType != null && contentType.includes('text/html')) {
             try {
                 let dom = parser.parseFromString(text)
                 if (dom.getElementsByTagName('title').length > 0) {
@@ -158,6 +159,7 @@ let Engine = async url => {
 
 let cycle = () => {
     if (!recents.includes(urls[0])) {
+        console.log("\x1b[36m"+urls[0]+"\x1b[0m")
         Engine(urls[0]).then(()=>{
             recents.push(urls[0])
             if (recents.length > 100000) recents.shift()
@@ -165,6 +167,7 @@ let cycle = () => {
             cycle()
         })
     } else {
+        console.log("\x1b[35m"+urls[0]+"\x1b[0m")
         urls.shift()
         cycle()
     }
