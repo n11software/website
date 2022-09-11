@@ -154,11 +154,20 @@ let Engine = async url => {
     })
 }
 
+let recents = []
+
 let cycle = () => {
-    Engine(urls[0]).then(()=>{
+    if (!recents.includes(urls[0])) {
+        Engine(urls[0]).then(()=>{
+            recents.push(urls[0])
+            if (recents.length > 1000) recents.shift()
+            urls.shift()
+            cycle()
+        })
+    } else {
         urls.shift()
         cycle()
-    })
+    }
 }
 
 Engine('https://wikipedia.org/').then(()=>{
