@@ -19,9 +19,9 @@ sql.connect(err => {
 })
 
 let r
-async function* iterator(fileURL) {
+async function* iterator(url) {
     const utf8Decoder = new TextDecoder('utf-8');
-    r = await fetch(fileURL, {headers: {
+    r = await fetch(url, {headers: {
         'Accept-Language': 'en;q=0.9, *;q=0.8',
     }}).catch((e)=>{console.log(console.log("\x1b[31m" + url + "\x1b[0m"))})
     const reader = r.body.getReader();
@@ -47,7 +47,6 @@ async function* iterator(fileURL) {
     }
   
     if (startIndex < chunk.length) {
-      // Last line didn't end in a newline char
       yield chunk.substr(startIndex);
     }
   }
@@ -56,7 +55,7 @@ async function* iterator(fileURL) {
     let ret = ""
     for await (const line of iterator(url)) {
         ret += line
-        if (ret.length>10000) return ret
+        if (ret.length>1048576) return ret
     }
     return ret
   }
