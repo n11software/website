@@ -10,7 +10,8 @@ var sql = mysql.createConnection({
     host: "n11.dev",
     user: process.env.USERNAME,
     password: process.env.PASSWORD,
-    database: "engine"
+    database: "engine",
+    charset : 'utf8mb4'
 })
 
 sql.connect(err => {
@@ -24,7 +25,11 @@ async function* iterator(url) {
         const utf8Decoder = new TextDecoder('utf-8');
         r = await fetch(url, {headers: {
             'Accept-Language': 'en;q=0.9, *;q=0.8',
-        }}).catch((e)=>{console.log(console.log("\x1b[31m" + url + "\x1b[0m"))})
+        }}).catch((e)=>{
+            process.stdout.clearLine(0)
+            process.stdout.cursorTo(0)
+            process.stdout.write("\x1b[31m" + url + "\x1b[0m")
+        })
         const reader = r.body.getReader();
         let { value: chunk, done: readerDone } = await reader.read();
         chunk = chunk ? utf8Decoder.decode(chunk) : '';
@@ -34,26 +39,34 @@ async function* iterator(url) {
         let result;
     
         while (true) {
-        let result = re.exec(chunk);
-        if (!result) {
-            if (readerDone) break;
-            let remainder = chunk.substr(startIndex);
-            ({ value: chunk, done: readerDone } = await reader.read());
-            chunk = remainder + (chunk ? utf8Decoder.decode(chunk) : '');
-            startIndex = re.lastIndex = 0;
-            continue;
-        }
-        yield chunk.substring(startIndex, result.index);
-        startIndex = re.lastIndex;
+            let result = re.exec(chunk);
+            if (!result) {
+                if (readerDone) break;
+                let remainder = chunk.substr(startIndex);
+                ({ value: chunk, done: readerDone } = await reader.read());
+                chunk = remainder + (chunk ? utf8Decoder.decode(chunk) : '');
+                startIndex = re.lastIndex = 0;
+                process.stdout.cursorTo(0)
+                process.stdout.write("\x1b[36m"+urls[0]+"\x1b[0m (" + chunk.length + ")")
+                continue;
+            }
+            process.stdout.clearLine(0)
+            process.stdout.cursorTo(0)
+            process.stdout.write("\x1b[36m"+urls[0]+"\x1b[0m")
+            yield chunk.substring(startIndex, result.index);
+            startIndex = re.lastIndex;
         }
     
         if (startIndex < chunk.length) {
-        yield chunk.substr(startIndex);
+            process.stdout.clearLine(0)
+            process.stdout.cursorTo(0)
+            process.stdout.write("\x1b[36m"+urls[0]+"\x1b[0m")
+            yield chunk.substr(startIndex);
         }
     } catch (e) {
         yield null
     }
-  }
+}
   
   async function fetchUnlessMassive(url) {
     let ret = ""
@@ -74,11 +87,16 @@ let PushSite = (url, title, description, keywords) => {
             sql.query("INSERT INTO sites (hash, url, title, description, keywords, lang, time, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [hash, url, title, description, keywords, "en", time, time], function (err, result) {
                 if (err) console.log(err)
                 console.log("\x1b[32m" + url + "\x1b[0m")
+                process.stdout.clearLine(0)
+                process.stdout.cursorTo(0)
+                process.stdout.write("\x1b[32m" + url + "\x1b[0m\n")
             })
         } else {
             sql.query("UPDATE sites SET title = ?, description = ?, keywords = ?, updated = ? WHERE hash = ?", [title, description, keywords, time, hash], (err, res) => {
                 if (err) console.log(err)
-                console.log("\x1b[34m" + url + "\x1b[0m")
+                process.stdout.clearLine(0)
+                process.stdout.cursorTo(0)
+                process.stdout.write("\x1b[34m" + url + "\x1b[0m\n")
             })
         }
     })
@@ -86,7 +104,7 @@ let PushSite = (url, title, description, keywords) => {
 let recents = []
 let urls = []
 let Engine = async url => {
-    if (!/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(url)) return
+    if (!/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(url)) return 2
     let proto = url.split(':')[0]
     let host = url.split('/')[2]
     return fetchUnlessMassive(url).then(text => {
@@ -158,9 +176,15 @@ let Engine = async url => {
 }
 
 let cycle = () => {
+    if (urls.length == 0) {
+        console.log("Done")
+        sql.end()
+        return
+    }
     if (!recents.includes(urls[0])) {
         console.log("\x1b[36m"+urls[0]+"\x1b[0m")
-        Engine(urls[0]).then(()=>{
+        Engine(urls[0]).then(ret=>{
+            if (ret == 2 || ret == null) console.log("\n")
             recents.push(urls[0])
             if (recents.length > 100000) recents.shift()
             urls.shift()
@@ -173,6 +197,5 @@ let cycle = () => {
     }
 }
 
-Engine(process.argv[2]).then(()=>{
-    cycle()
-})
+urls.push(process.argv[2])
+cycle()
