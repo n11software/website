@@ -39,3 +39,22 @@ document.querySelector('.container>input[type="text"]').onfocus = () => {
 document.querySelector('.container>input[type="text"]').onblur = () => {
   document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.025)"
 }
+
+let themeEditorOpen = false
+
+document.querySelector('body').onmousemove = e => {
+  if (e.clientX > window.innerWidth - 100 && e.clientY > window.innerHeight - 100) {
+    document.querySelector('.edit-button').classList.remove("hidden")
+  } else if (!themeEditorOpen) {
+    document.querySelector('.edit-button').classList.add("hidden")
+  }
+}
+
+document.querySelector('.edit-button').onclick = () => {
+  themeEditorOpen = !themeEditorOpen
+  if (themeEditorOpen) {
+    document.querySelector('.edit-menu').classList.remove("hidden")
+  } else {
+    document.querySelector('.edit-menu').classList.add("hidden")
+  }
+}
