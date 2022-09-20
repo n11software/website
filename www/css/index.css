@@ -9,7 +9,7 @@
 }
 
 body {
-  background-color: #f8f8f8;
+  background-color: [background];
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -20,7 +20,7 @@ body {
 
 .container {
   border: none;
-  background-color: white;
+  background-color: [content];
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -36,11 +36,16 @@ body {
   width: 500px;
   padding: 5px 15px;
   border-radius: 10px;
+  background-color: transparent;
   font-family: 'JetBrains Mono', monospace;
   border: none;
   font-size: large;
-  color: #1c1917;
+  color: [text];
   outline: 0;
+}
+
+.container > input[type="text"]::placeholder {
+  color: [placeholder]
 }
 
 .container > .suggestions {
@@ -50,7 +55,7 @@ body {
   width: 100%;
   border: none;
   font-size: large;
-  color: #5e5e5e;
+  color: [subtext];
   outline: 0;
 }
 
@@ -59,7 +64,7 @@ body {
 }
 
 .suggestion>span>span {
-  color: #1c1917;
+  color: [text];
 }
 
 .edit-container {
@@ -76,9 +81,9 @@ body {
   height: 1.5rem;
   width: 1.5rem;
   z-index: 30;
-  background-color: white;
+  background-color: [content];
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
-  color: #1c1917;
+  color: [text];
   padding: 10px;
   border-radius: 10px;
   cursor: pointer;
@@ -88,10 +93,10 @@ body {
   position: absolute;
   bottom: 4rem;
   right: 0;
-  background-color: white;
+  background-color: [content];
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
   font-family: 'JetBrains Mono', monospace;
-  color: #1c1917;
+  color: [text];
   white-space: nowrap;
   border-radius: 10px;
   padding: 10px;
@@ -111,7 +116,7 @@ body {
 .edit-menu > .edit-menu-item {
   display: flex;
   flex-direction: row;
-  color: #5e5e5e;
+  color: [subtext];
   align-items: center;
   justify-content: space-between;
   width: 100%;
@@ -133,7 +138,7 @@ body {
 }
 
 .edit-menu > .edit-menu-item > .wheel::-webkit-color-swatch {
-  border: 1px solid #5e5e5e;
+  border: 1px solid [subtext];
   border-radius: 5px;
 }
 
@@ -151,20 +156,20 @@ body {
 }
 
 .preset-themes {
-  background-color: #eee;
-  color: #5e5e5e;
+  background-color: [subbtn];
+  color: [subbtntxt];
   margin-top: 10px;
 }
 
 .save-theme {
-  background-color: #000000;
+  background-color: [btn];
   margin-top: 5px;
-  color: white;
+  color: [btntxt];
 }
 
 .checkbox {
-  accent-color: black;
-  border: 1px solid #5e5e5e;
+  accent-color: [btn];
+  border: 1px solid [subtext];
   box-sizing: unset;
   height: 15px;
   width: 15px;

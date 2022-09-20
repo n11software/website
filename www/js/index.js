@@ -58,3 +58,14 @@ document.querySelector('.edit-button').onclick = () => {
     document.querySelector('.edit-menu').classList.add("hidden")
   }
 }
+
+document.querySelector('#save-theme').onclick = () => {
+  let theme = "", items = document.querySelectorAll('.edit-menu-item')
+  items.forEach(item => {
+    if (item.lastElementChild.classList.contains("checkbox")) theme += item.lastElementChild.checked + ","
+    else theme += item.lastElementChild.value + ","
+  })
+  if (theme[theme.length-1]==",") theme = theme.slice(0, -1)
+  document.cookie = `theme=${theme}`
+  location.reload()
+}

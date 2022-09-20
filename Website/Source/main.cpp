@@ -19,6 +19,75 @@ std::string compress(std::string data) {
   return (std::ostringstream&)zs << std::flush, output.str();
 }
 
+std::vector<std::string> split(std::string data, std::string delimiter) {
+  std::vector<std::string> result;
+  size_t pos = 0;
+  std::string token;
+  while ((pos = data.find(delimiter)) != std::string::npos) {
+    token = data.substr(0, pos);
+    result.push_back(token);
+    data.erase(0, pos + delimiter.length());
+  }
+  return result;
+}
+
+std::string replace(std::string data, std::string delimiter, std::string replacement) {
+  size_t pos = 0;
+  while ((pos = data.find(delimiter)) != std::string::npos) {
+    data.replace(pos, delimiter.length(), replacement);
+  }
+  return data;
+}
+
+std::string theme(std::string data, std::string cookies) {
+  if (cookies.find("theme=") != std::string::npos) {
+    std::vector<std::string> theme = split(cookies.substr(cookies.find("theme=")+6), ",");
+    std::string var;
+    for (int i = 0; i < theme.size(); i++) {
+      switch (i) {
+        case 0:
+          data = replace(data, "[background]", theme[i]);
+          break;
+        case 1:
+          data = replace(data, "[content]", theme[i]);
+          break;
+        case 2:
+          data = replace(data, "[placeholder]", theme[i]);
+          break;
+        case 3:
+          data = replace(data, "[text]", theme[i]);
+          break;
+        case 4:
+          data = replace(data, "[subtext]", theme[i]);
+          break;
+        case 5:
+          data = replace(data, "[btn]", theme[i]);
+          break;
+        case 6:
+          data = replace(data, "[btntxt]", theme[i]);
+          break;
+        case 7:
+          data = replace(data, "[subbtn]", theme[i]);
+          break;
+        case 8:
+          data = replace(data, "[subbtntxt]", theme[i]);
+          break;
+      }
+    }
+  } else {
+    data = replace(data, "[background]", "#f8f8f8");
+    data = replace(data, "[content]", "#ffffff");
+    data = replace(data, "[placeholder]", "#a9a9a9");
+    data = replace(data, "[text]", "#1c1917");
+    data = replace(data, "[subtext]", "#5e5e5e");
+    data = replace(data, "[btn]", "#000000");
+    data = replace(data, "[btntxt]", "#ffffff");
+    data = replace(data, "[subbtn]", "#eeeeee");
+    data = replace(data, "[subbtntxt]", "#5e5e5e");
+  }
+  return data;
+}
+
 int main() {
   Link Server(3000);
 
@@ -39,7 +108,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/index.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(str);
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
   });
 
@@ -49,7 +118,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/css/index.css");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(str);
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
   });
 
@@ -59,7 +128,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/js/index.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(str);
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
   });
 
