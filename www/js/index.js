@@ -1,3 +1,5 @@
+let shadowsEnabled = {shadows}
+
 document.querySelector('.container>input[type="text"]').onkeyup = key => {
   // Replace N11 with N¹¹
   document.querySelector('.container>input[type="text"]').value = document.querySelector('.container>input[type="text"]').value.replace('N11', 'N¹¹')
@@ -33,11 +35,11 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
 }
 
 document.querySelector('.container>input[type="text"]').onfocus = () => {
-  document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.05)"
+  if (shadowsEnabled) document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.05)"
 }
 
 document.querySelector('.container>input[type="text"]').onblur = () => {
-  document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.025)"
+  if (shadowsEnabled) document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.025)"
 }
 
 let themeEditorOpen = false

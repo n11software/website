@@ -28,6 +28,7 @@ std::vector<std::string> split(std::string data, std::string delimiter) {
     result.push_back(token);
     data.erase(0, pos + delimiter.length());
   }
+  result.push_back(data);
   return result;
 }
 
@@ -72,6 +73,17 @@ std::string theme(std::string data, std::string cookies) {
         case 8:
           data = replace(data, "[subbtntxt]", theme[i]);
           break;
+        case 9:
+          if (theme[i].substr(0, theme[i].length()-1) == "true") {
+            data = replace(data, "/* [shadow] ", "");
+            data = replace(data, " */", "");
+            data = replace(data, "{shadows}", "true");
+            data = replace(data, "[shch]", "checked");
+          } else {
+            data = replace(data, "{shadows}", "false");
+            data = replace(data, "[shch]", "");
+          }
+          break;
       }
     }
   } else {
@@ -84,6 +96,10 @@ std::string theme(std::string data, std::string cookies) {
     data = replace(data, "[btntxt]", "#ffffff");
     data = replace(data, "[subbtn]", "#eeeeee");
     data = replace(data, "[subbtntxt]", "#5e5e5e");
+    data = replace(data, "/* [shadow] ", "");
+    data = replace(data, " */", "");
+    data = replace(data, "{shadows}", "true");
+    data = replace(data, "[shch]", "checked");
   }
   return data;
 }
