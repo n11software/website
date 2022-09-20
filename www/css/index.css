@@ -147,7 +147,7 @@ body {
   animation: fade .25s linear;
 }
 
-.theme-button {
+.theme-button, .default-theme, .black-theme, .od-theme, .back-button {
   font-size: medium;
   border: none;
   padding: 5px;
@@ -155,7 +155,29 @@ body {
   border-radius: 5px;
 }
 
-.preset-themes {
+.default-theme {
+  background-image: -webkit-linear-gradient(170deg, white 50%, black 50%);
+  color: white;
+  margin-bottom: 2px;
+}
+
+.default-theme span {
+  color: black;
+}
+
+.black-theme {
+  background-color: black;
+  color: white;
+  margin-bottom: 2px;
+}
+
+.od-theme {
+  background-color: #282c34;
+  color: #abb2bf;
+  margin-bottom: 5px;
+}
+
+.preset-themes, .back-button {
   background-color: [subbtn];
   color: [subbtntxt];
   margin-top: 10px;

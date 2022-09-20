@@ -71,3 +71,43 @@ document.querySelector('#save-theme').onclick = () => {
   document.cookie = `theme=${theme}`
   location.reload()
 }
+
+let prevPageChildren = []
+document.querySelector('#preset-themes').onclick = () => {
+  prevPageChildren = []
+  prevPage = document.querySelector('.edit-menu')
+  while (prevPage.lastElementChild) {
+    prevPageChildren.push(prevPage.lastElementChild)
+    prevPage.removeChild(prevPage.lastElementChild)
+  }
+  document.querySelector('.edit-menu').innerHTML = `\
+  <span class="title">Preset Themes</span>\
+  <button class="default-theme" id="default-button">Def<span>ault</span></button>\
+  <button class="black-theme" id="black-button">Pure Black</button>\
+  <button class="od-theme" id="od-button">One Dark</button>\
+  <button class="back-button" id="back-button">Back</button>`
+  
+  document.querySelector('#back-button').onclick = () => {
+    document.querySelector('.edit-menu').innerHTML = ""
+    prevPageChildren.reverse()
+    prevPageChildren.forEach(child => {
+      document.querySelector('.edit-menu').appendChild(child)
+    })
+  }
+
+  document.querySelector('#default-button').onclick = () => {
+    document.cookie = "theme=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;"
+    location.reload()
+  }
+
+  document.querySelector('#black-button').onclick = () => {
+    document.cookie = "theme=#000000,#1c1c1c,#a9a9a9,#ffffff,#c4c4c4,#ffffff,#525252,#3b3b3b,#ffffff,false"
+    location.reload()
+  }
+
+  document.querySelector('#od-button').onclick = () => {
+    document.cookie = "theme=#282c34,#4b5263,#abb2bf,#abb2bf,#abb2bf,#61afef,#ffffff,#abb2bf,#ffffff,false"
+    location.reload()
+  }
+  
+}
