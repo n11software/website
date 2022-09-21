@@ -36,10 +36,10 @@ std::vector<std::string> split(std::string data, std::string delimiter) {
   std::string token;
   while ((pos = data.find(delimiter)) != std::string::npos) {
     token = data.substr(0, pos);
-    result.push_back(token);
+    if (token != "") result.push_back(token);
     data.erase(0, pos + delimiter.length());
   }
-  result.push_back(data);
+  if (data != "") result.push_back(data);
   return result;
 }
 
@@ -201,8 +201,19 @@ int main() {
       if (req->GetQuery("suggestions")=="true") {
         std::string data = "{\"suggestions\":[";
         try {
+          std::vector<std::string> words = split(req->GetQuery("q"), " ");
+          std::string q = "SELECT * FROM query WHERE";
+          int x = 0;
+          for (std::string word: words) {
+            if (x == 0) {
+              q += " query LIKE '%" + word + "%'";
+            } else {
+              q += " OR query LIKE '%" + word + "%'";
+            }
+            x++;
+          }
           sql::Statement* stmt = db->createStatement();
-          sql::ResultSet* res = stmt->executeQuery("SELECT * FROM query WHERE query LIKE '%" + req->GetQuery("q") + "%' ORDER BY searches DESC LIMIT 5");
+          sql::ResultSet* res = stmt->executeQuery(q+" ORDER BY searches DESC LIMIT 5");
           int i = 0;
           while (res->next()) {
             data += "\"" + res->getString("query") + "\",";
