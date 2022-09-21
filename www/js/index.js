@@ -6,30 +6,40 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
   if (key.keyCode === 8) {
     document.querySelector('.container>input[type="text"]').value = document.querySelector('.container>input[type="text"]').value.replace(/(?!.*N¹¹)N¹/, 'N1')
   }
-  
-  // Get suggestions
   let query = document.querySelector('.container>input[type="text"]').value
+  if (key.keyCode === 13) {
+    window.location.pathname = '/search?q=' + query
+  }
+  // Get suggestions
   if (query.length > 0) {
-    document.querySelector('.container>input[type="text"]').style.borderBottom = "1px solid #ccc"
-    document.querySelector('.container>input[type="text"]').style.borderRadius = "10px 10px 0 0"
-    document.querySelector('.container>input[type="text"]').style.marginBottom = "5px"
     fetch(`${window.location.origin}/search?q=${query}&suggestions=true`).then(res => {
       let history = [], suggestions = [], images = []
       res.json().then(data => {
         history = data.history
         suggestions = data.suggestions
         images = data.images
+
+        if (suggestions.length > 0) {
+          document.querySelector('.container>input[type="text"]').style.borderBottom = "1px solid #ccc"
+          document.querySelector('.container>input[type="text"]').style.borderRadius = "10px 10px 0 0"
+          document.querySelector('.container>input[type="text"]').style.marginBottom = "5px"
+        } else {
+          document.querySelector('.container>input[type="text"]').style.borderBottom = "none"
+          document.querySelector('.container>input[type="text"]').style.borderRadius = "10px"
+          document.querySelector('.container>input[type="text"]').style.marginBottom = "0"
+          document.querySelector('.container>.suggestions').innerHTML = ""
+        }
       
         document.querySelector('.container>.suggestions').innerHTML = ""
         suggestions.forEach(suggestion => {
-          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion"><span class="query">${suggestion.replace(query, "<span>" + suggestion.match(query) + "</span>")}</span></div>`
+          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion"><span class="query">${suggestion.replace(query, "<span>" + query + "</span>")}</span></div>`
         })
       })
     })
   } else {
-    document.querySelector('.container>input[type="text"]').style.border = "none"
+    document.querySelector('.container>input[type="text"]').style.borderBottom = "none"
     document.querySelector('.container>input[type="text"]').style.borderRadius = "10px"
-    document.querySelector('.container>input[type="text"]').style.marginBottom = ""
+    document.querySelector('.container>input[type="text"]').style.marginBottom = "0"
     document.querySelector('.container>.suggestions').innerHTML = ""
   }
 }

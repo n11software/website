@@ -1,6 +1,17 @@
 #include <link>
 #include <iostream>
-#include "../Include/zstr.hpp"
+#include <algorithm>
+#include <cctype>
+#include <string>
+#include <zstr.hpp>
+#include "mysql_driver.h" 
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+
+sql::Driver* driver;
+sql::Connection* db;
 
 std::string compress(std::string data) {
   std::ostringstream output;
@@ -104,7 +115,39 @@ std::string theme(std::string data, std::string cookies) {
   return data;
 }
 
+int addSearchTerm(std::string term) {
+  try {
+    sql::Statement* stmt = db->createStatement();
+    sql::ResultSet* res = stmt->executeQuery("SELECT * FROM query WHERE query = '" + term + "'");
+    if (res->next()) {
+      stmt->execute("UPDATE query SET searches = searches + 1 WHERE query = '" + term + "'");
+    } else {
+      stmt->execute("INSERT INTO query (query, searches) VALUES ('" + term + "', 1)");
+    }
+    delete res;
+    delete stmt;
+    return 0;
+  } catch (sql::SQLException &e) {
+    std::cout << "Error: " << e.what() << std::endl;
+    return 1;
+  }
+}
+
 int main() {
+  std::string db_user, db_pass, db_host, line;
+  std::ifstream db_file("db.txt");
+  while (std::getline(db_file, line)) {
+    if (line.find("user=") != std::string::npos) {
+      db_user = line.substr(line.find("user=")+5);
+    } else if (line.find("pass=") != std::string::npos) {
+      db_pass = line.substr(line.find("pass=")+5);
+    } else if (line.find("host=") != std::string::npos) {
+      db_host = line.substr(line.find("host=")+5);
+    }
+  }
+  driver = get_driver_instance();
+  db = driver->connect("tcp://" + db_host + ":3306", db_user, db_pass);
+  db->setSchema("n11");
   Link Server(3000);
 
   // Return 404 Page
@@ -156,9 +199,28 @@ int main() {
       res->SetHeader("Content-Type", "text/html; charset=utf-8");
       res->SetHeader("Content-Encoding", "gzip");
       if (req->GetQuery("suggestions")=="true") {
-        std::string compressed = compress("{\"suggestions\":[ \"Hi\", \"Hello\", \"Bye\" ]}");
-        res->Send(compressed);
+        std::string data = "{\"suggestions\":[";
+        try {
+          sql::Statement* stmt = db->createStatement();
+          sql::ResultSet* res = stmt->executeQuery("SELECT * FROM query WHERE query LIKE '%" + req->GetQuery("q") + "%' ORDER BY searches DESC LIMIT 5");
+          int i = 0;
+          while (res->next()) {
+            data += "\"" + res->getString("query") + "\",";
+            i++;
+          }
+          data = data.substr(0, data.length()-1);
+          data += "]}";
+          if (i == 0) {
+            data = "{\"suggestions\":[]}";
+          }
+        } catch (sql::SQLException &e) {
+          std::cout << "Error: " << e.what() << std::endl;
+        }
+        res->Send(compress(data));
       } else {
+        std::string data = req->GetQuery("q");
+        std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
+        if (req->GetQuery("q").length() <= 256) addSearchTerm(data);
         std::ifstream file("www/search.html");
         std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         std::string compressed = compress(str);
@@ -166,10 +228,6 @@ int main() {
       }
     }
   });
-
-
-
-
 
   // Fonts
   Server.Get("/fonts/jbm.css", [](Request* req, Response* res) {
