@@ -33,6 +33,8 @@ document.querySelector('.container>input[type="text"]').onkeydown = key => {
   }
 }
 
+let prevVal = ""
+
 document.querySelector('.container>input[type="text"]').onkeyup = key => {
   if (key.keyCode === 40) {
     return
@@ -50,6 +52,7 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
   if (key.keyCode === 13) {
     window.location.href = `/search?q=${query}`
   }
+  if (query == prevVal) return
   // Get suggestions
   if (query.length > 0) {
     fetch(`${window.location.origin}/search?q=${query}&suggestions=true`).then(res => {
@@ -82,6 +85,7 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
     document.querySelector('.container>input[type="text"]').style.marginBottom = "0"
     document.querySelector('.container>.suggestions').innerHTML = ""
   }
+  prevVal = query
 }
 
 document.querySelector('.container>input[type="text"]').onfocus = () => {

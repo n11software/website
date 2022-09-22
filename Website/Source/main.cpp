@@ -201,14 +201,24 @@ int main() {
       if (req->GetQuery("suggestions")=="true") {
         std::string data = "{\"suggestions\":[";
         try {
-          std::vector<std::string> words = split(req->GetQuery("q"), " ");
+          std::string _q = req->GetQuery("q");
+          _q = replace(_q, "_", "\\o");
+          std::vector<std::string> words = split(_q, " ");
           std::string q = "SELECT * FROM query WHERE";
           int x = 0;
           for (std::string word: words) {
             if (x == 0) {
-              q += " query LIKE '%" + word + "%'";
+              if (word[0] == '-') {
+                q += " query NOT LIKE '%" + word.substr(1) + "%'";
+              } else {
+                q += " query LIKE '%" + word + "%'";
+              }
             } else {
-              q += " OR query LIKE '%" + word + "%'";
+              if (word[0] == '-') {
+                q += " AND query NOT LIKE '%" + word.substr(1) + "%'";
+              } else {
+                q += " AND query LIKE '%" + word + "%'";
+              }
             }
             x++;
           }
@@ -217,6 +227,7 @@ int main() {
             return;
           }
           sql::Statement* stmt = db->createStatement();
+          // std::cout << q +" ORDER BY searches DESC LIMIT 5" << std::endl;
           sql::ResultSet* res = stmt->executeQuery(q+" ORDER BY searches DESC LIMIT 5");
           int i = 0;
           while (res->next()) {
