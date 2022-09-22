@@ -212,6 +212,10 @@ int main() {
             }
             x++;
           }
+          if (x == 0) {
+            res->Send(compress("{\"error\":\"Could not parse terms!\"}"));
+            return;
+          }
           sql::Statement* stmt = db->createStatement();
           sql::ResultSet* res = stmt->executeQuery(q+" ORDER BY searches DESC LIMIT 5");
           int i = 0;
