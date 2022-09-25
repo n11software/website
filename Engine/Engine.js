@@ -78,13 +78,13 @@ async function* iterator(url) {
   }
   
 
-let PushSite = (url, title, description, keywords) => {
+let PushSite = (url, title, description, keywords, lang) => {
     let hash = crypto.createHash('sha256').update(url).digest('hex')
     let time = new Date().toISOString()
     sql.query("SELECT * FROM sites WHERE hash = ?", [hash], function (err, result) {
         if (err) throw err
         if (result.length == 0) {
-            sql.query("INSERT INTO sites (hash, url, title, description, keywords, lang, time, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [hash, url, title, description, keywords, "en", time, time], function (err, result) {
+            sql.query("INSERT INTO sites (hash, url, title, description, keywords, lang, time, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [hash, url, title, description, keywords, lang, time, time], function (err, result) {
                 if (err) console.log(err)
                 console.log("\x1b[32m" + url + "\x1b[0m")
                 process.stdout.clearLine(0)
@@ -92,7 +92,7 @@ let PushSite = (url, title, description, keywords) => {
                 process.stdout.write("\x1b[32m" + url + "\x1b[0m\n")
             })
         } else {
-            sql.query("UPDATE sites SET title = ?, description = ?, keywords = ?, updated = ? WHERE hash = ?", [title, description, keywords, time, hash], (err, res) => {
+            sql.query("UPDATE sites SET title = ?, description = ?, keywords = ?, lang = ?, updated = ? WHERE hash = ?", [title, description, keywords, lang, time, hash], (err, res) => {
                 if (err) console.log(err)
                 process.stdout.clearLine(0)
                 process.stdout.cursorTo(0)
@@ -133,6 +133,7 @@ let Engine = async url => {
         if (urel != null) urel.forEach(url => urls.push(proto + "://" + host + url[url.length-1] == "/"? "": "/" + url))
 
         let contentType = r.headers.get('Content-Type')
+        let lang = r.headers.get('Content-Language')
         if (r.status == 200 && contentType != null && contentType.includes('text/html')) {
             try {
                 let dom = parser.parseFromString(text)
@@ -165,11 +166,14 @@ let Engine = async url => {
                 if (dom.getElementsByName("keywords").length > 0) {
                     keywords = dom.getElementsByName("keywords")[0].getAttribute("content")
                 }
+                if (dom.getElementsByName("html").length > 0) {
+                    lang = dom.getElementsByName("html")[0].getAttribute("lang")
+                }
             } catch (e) {
                 console.log(e)
             }
             if (title == "") title = url
-            PushSite(url, title, description, keywords)
+            PushSite(url, title, description, keywords, lang == null? "": lang)
         }
         return 1
     })

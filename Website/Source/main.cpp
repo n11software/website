@@ -181,6 +181,16 @@ int main() {
     res->Send(compressed);
   });
 
+  // Return stylesheet for search
+  Server.Get("/css/search.css", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/css; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/css/search.css");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
   // Return javascript for index
   Server.Get("/js/index.js", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
@@ -191,10 +201,22 @@ int main() {
     res->Send(compressed);
   });
 
+  // Return javascript for index
+  Server.Get("/js/search.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/search.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
   // Search Page
   Server.Get("/search", [](Request* req, Response* res) {
     if (req->GetQuery("q") == "") {
-      res->Error(404);
+      res->SetHeader("Location", "/");
+      res->SetStatus("302 Found");
+      res->Send("");
     } else {
       res->SetHeader("Content-Type", "text/html; charset=utf-8");
       res->SetHeader("Content-Encoding", "gzip");
@@ -227,7 +249,6 @@ int main() {
             return;
           }
           sql::Statement* stmt = db->createStatement();
-          // std::cout << q +" ORDER BY searches DESC LIMIT 5" << std::endl;
           sql::ResultSet* res = stmt->executeQuery(q+" ORDER BY searches DESC LIMIT 5");
           int i = 0;
           while (res->next()) {
@@ -247,8 +268,50 @@ int main() {
         std::string data = req->GetQuery("q");
         std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
         if (req->GetQuery("q").length() <= 256) addSearchTerm(data);
+        data = "";
         std::ifstream file("www/search.html");
         std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        str = replace(str, "[query]", req->GetQuery("q"));
+        try {
+          std::string _q = req->GetQuery("q");
+          _q = replace(_q, "_", "\\o");
+          std::vector<std::string> words = split(_q, " ");
+          std::string q = "SELECT * FROM sites WHERE";
+          int x = 0;
+          for (std::string word: words) {
+            if (x == 0) {
+              if (word[0] == '-') {
+                q += " title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
+              } else {
+                q += " title LIKE '%" + word + "%' OR description LIKE '%" + word + "%' OR keywords LIKE '%" + word + "%'";
+              }
+            } else {
+              if (word[0] == '-') {
+                q += " OR title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
+              } else {
+                q += " OR title LIKE '%" + word + "%' OR description NOT LIKE '%" + word + "%' OR keywords NOT LIKE '%" + word + "%'";
+              }
+            }
+            x++;
+          }
+          if (x == 0) {
+            res->Send(compress("{\"error\":\"Could not parse terms!\"}"));
+            return;
+          }
+          sql::Statement* stmt = db->createStatement();
+          sql::ResultSet* res = stmt->executeQuery(q+" AND lang='en' ORDER BY updated DESC LIMIT 10");
+          int i = 0;
+          while (res->next()) {
+            data += "<a href=\"" + res->getString("url") + "\">" + res->getString("title") + "</a>\n";
+            i++;
+          }
+          if (i == 0) {
+            data = "No results found!";
+          }
+        } catch (sql::SQLException &e) {
+          std::cout << "Error: " << e.what() << std::endl;
+        }
+        str = replace(str, "[results]", data);
         std::string compressed = compress(str);
         res->Send(compressed);
       }
