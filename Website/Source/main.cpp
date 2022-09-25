@@ -299,10 +299,11 @@ int main() {
             return;
           }
           sql::Statement* stmt = db->createStatement();
-          sql::ResultSet* res = stmt->executeQuery(q+" AND lang='en' ORDER BY updated DESC LIMIT 10");
+          sql::ResultSet* res = stmt->executeQuery(q+" AND lang='en' LIMIT 10");
           int i = 0;
           while (res->next()) {
             data += "<a href=\"" + res->getString("url") + "\">" + res->getString("title") + "</a>\n";
+            data += "<span>" + res->getString("description") + "</span>\n";
             i++;
           }
           if (i == 0) {
