@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-project(fire)
+project(n11)
 
 add_subdirectory(Website)
