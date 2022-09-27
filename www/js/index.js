@@ -16,7 +16,7 @@ document.querySelector('.container>input[type="text"]').onkeydown = key => {
       if (suggestionIndex > 1) {
         suggestionIndex--
         document.querySelector('.container>.suggestions').children[suggestionIndex-1].style.fontWeight = 'bold'
-        document.querySelector('.container>input[type="text"]').value = document.querySelector('.container>.suggestions').children[suggestionIndex-1].children[0].innerText
+        document.querySelector('.container>input[type="text"]').value = document.querySelector('.container>.suggestions').children[suggestionIndex-1].getAttribute('href')
       } else suggestionIndex = 0
     }
   } else if (key.key === 'ArrowDown') {
@@ -26,7 +26,7 @@ document.querySelector('.container>input[type="text"]').onkeydown = key => {
       suggestionIndex++
       if (document.querySelector('.container>.suggestions').children[suggestionIndex-1]) {
         document.querySelector('.container>.suggestions').children[suggestionIndex-1].style.fontWeight = "bold"
-        document.querySelector('.container>input[type="text"]').value = document.querySelector('.container>.suggestions').children[suggestionIndex-1].children[0].innerText
+        document.querySelector('.container>input[type="text"]').value = document.querySelector('.container>.suggestions').children[suggestionIndex-1].getAttribute('href')
       }
       else suggestionIndex = 0
     }
@@ -75,7 +75,9 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
       
         document.querySelector('.container>.suggestions').innerHTML = ""
         suggestions.forEach(suggestion => {
-          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" onclick="window.location.href='/search?q=${suggestion}'"><span class="query">${suggestion.replace(query, "<span>" + query + "</span>")}</span></div>`
+          let display = suggestion.replace(query, "<span>" + query + "</span>").substring(0,42)
+          if (display.length==42) display = display + "..."
+          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" href="${suggestion}" onclick="window.location.href='/search?q=${suggestion}'"><span class="query">${display}</span></div>`
         })
       })
     })
