@@ -115,6 +115,27 @@ std::string theme(std::string data, std::string cookies) {
   return data;
 }
 
+void connect() {
+  std::string db_user, db_pass, db_host, line;
+  std::ifstream db_file("db.txt");
+  while (std::getline(db_file, line)) {
+    if (line.find("user=") != std::string::npos) {
+      db_user = line.substr(line.find("user=")+5);
+    } else if (line.find("pass=") != std::string::npos) {
+      db_pass = line.substr(line.find("pass=")+5);
+    } else if (line.find("host=") != std::string::npos) {
+      db_host = line.substr(line.find("host=")+5);
+    }
+  }
+  try {
+    driver = get_driver_instance();
+    db = driver->connect("tcp://" + db_host + ":3306", db_user, db_pass);
+    db->setSchema("n11");
+  } catch (sql::SQLException &e) {
+    std::cout << "Error: " << e.what() << std::endl;
+  }
+}
+
 int addSearchTerm(std::string term) {
   try {
     sql::Statement* stmt = db->createStatement();
@@ -128,26 +149,121 @@ int addSearchTerm(std::string term) {
     delete stmt;
     return 0;
   } catch (sql::SQLException &e) {
+    if (e.getErrorCode() == 2013) {
+      connect();
+      return addSearchTerm(term);
+    }
     std::cout << "Error: " << e.what() << std::endl;
     return 1;
   }
 }
 
-int main() {
-  std::string db_user, db_pass, db_host, line;
-  std::ifstream db_file("db.txt");
-  while (std::getline(db_file, line)) {
-    if (line.find("user=") != std::string::npos) {
-      db_user = line.substr(line.find("user=")+5);
-    } else if (line.find("pass=") != std::string::npos) {
-      db_pass = line.substr(line.find("pass=")+5);
-    } else if (line.find("host=") != std::string::npos) {
-      db_host = line.substr(line.find("host=")+5);
+std::string getSuggestions(std::string term) {
+  std::string data = "{\"suggestions\":[";
+  try {
+    term = replace(term, "_", "\\o");
+    std::vector<std::string> words = split(term, " ");
+    std::string q = "SELECT * FROM query WHERE";
+    int x = 0;
+    for (std::string word: words) {
+      if (x == 0) {
+        if (word[0] == '-') {
+          q += " query NOT LIKE '%" + word.substr(1) + "%'";
+        } else {
+          q += " query LIKE '%" + word + "%'";
+        }
+      } else {
+        if (word[0] == '-') {
+          q += " AND query NOT LIKE '%" + word.substr(1) + "%'";
+        } else {
+          q += " AND query LIKE '%" + word + "%'";
+        }
+      }
+      x++;
     }
+    if (x == 0) {
+      return compress("{\"error\":\"Could not parse terms!\"}");
+    }
+    sql::Statement* stmt = db->createStatement();
+    sql::ResultSet* res = stmt->executeQuery(q+" ORDER BY searches DESC LIMIT 5");
+    int i = 0;
+    while (res->next()) {
+      data += "\"" + res->getString("query") + "\",";
+      i++;
+    }
+    data = data.substr(0, data.length()-1);
+    data += "]}";
+    if (i == 0) {
+      data = "{\"suggestions\":[]}";
+    }
+  } catch (sql::SQLException &e) {
+    if (e.getErrorCode() == 2013) {
+      connect();
+      return compress(getSuggestions(term));
+    }
+    std::cout << "Error: " << e.what() << std::endl;
   }
-  driver = get_driver_instance();
-  db = driver->connect("tcp://" + db_host + ":3306", db_user, db_pass);
-  db->setSchema("n11");
+  return compress(data);
+}
+
+std::string getResults(std::string query, int page) {
+  std::string data = query;
+  std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
+  if (query.length() <= 256) addSearchTerm(data);
+  data = "";
+  std::ifstream file("www/search.html");
+  std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  str = replace(str, "[query]", query);
+  try {
+    std::string _q = query;
+    _q = replace(_q, "_", "\\o");
+    std::vector<std::string> words = split(_q, " ");
+    std::string q = "SELECT * FROM sites WHERE (lang='en') AND (";
+    int x = 0;
+    for (std::string word: words) {
+      if (x == 0) {
+        if (word[0] == '-') {
+          q += " title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
+        } else {
+          q += " title LIKE '%" + word + "%' OR description LIKE '%" + word + "%' OR keywords LIKE '%" + word + "%'";
+        }
+      } else {
+        if (word[0] == '-') {
+          q += " OR title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
+        } else {
+          q += " OR title LIKE '%" + word + "%' OR description NOT LIKE '%" + word + "%' OR keywords NOT LIKE '%" + word + "%'";
+        }
+      }
+      x++;
+    }
+    if (x == 0) {
+      return "{\"error\":\"Could not parse terms!\"}";
+    }
+    sql::Statement* stmt = db->createStatement();
+    sql::ResultSet* res = stmt->executeQuery(q+") OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
+    int i = 0;
+    while (res->next()) {
+      data += "<a href=\"" + res->getString("url") + "\">" + res->getString("title") + "</a>\n";
+      data += "<span>" + res->getString("description") + "</span>\n";
+      data += "<span>" + res->getString("lang") + "</span>\n";
+      i++;
+    }
+    if (i == 0) {
+      data = "No results found!";
+    }
+  } catch (sql::SQLException &e) {
+    if (e.getErrorCode() == 2013) {
+      connect();
+      return getResults(query, page);
+    }
+    std::cout << "Error: " << e.what() << std::endl;
+  }
+  str = replace(str, "[results]", data);
+  return str;
+}
+
+int main() {
+  connect();
   Link Server(3000);
 
   // Return 404 Page
@@ -221,100 +337,13 @@ int main() {
       res->SetHeader("Content-Type", "text/html; charset=utf-8");
       res->SetHeader("Content-Encoding", "gzip");
       if (req->GetQuery("suggestions")=="true") {
-        std::string data = "{\"suggestions\":[";
-        try {
-          std::string _q = req->GetQuery("q");
-          _q = replace(_q, "_", "\\o");
-          std::vector<std::string> words = split(_q, " ");
-          std::string q = "SELECT * FROM query WHERE";
-          int x = 0;
-          for (std::string word: words) {
-            if (x == 0) {
-              if (word[0] == '-') {
-                q += " query NOT LIKE '%" + word.substr(1) + "%'";
-              } else {
-                q += " query LIKE '%" + word + "%'";
-              }
-            } else {
-              if (word[0] == '-') {
-                q += " AND query NOT LIKE '%" + word.substr(1) + "%'";
-              } else {
-                q += " AND query LIKE '%" + word + "%'";
-              }
-            }
-            x++;
-          }
-          if (x == 0) {
-            res->Send(compress("{\"error\":\"Could not parse terms!\"}"));
-            return;
-          }
-          sql::Statement* stmt = db->createStatement();
-          sql::ResultSet* res = stmt->executeQuery(q+" ORDER BY searches DESC LIMIT 5");
-          int i = 0;
-          while (res->next()) {
-            data += "\"" + res->getString("query") + "\",";
-            i++;
-          }
-          data = data.substr(0, data.length()-1);
-          data += "]}";
-          if (i == 0) {
-            data = "{\"suggestions\":[]}";
-          }
-        } catch (sql::SQLException &e) {
-          std::cout << "Error: " << e.what() << std::endl;
-        }
-        res->Send(compress(data));
+        res->Send(getSuggestions(req->GetQuery("q")));
       } else {
-        std::string data = req->GetQuery("q");
-        std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
-        if (req->GetQuery("q").length() <= 256) addSearchTerm(data);
-        data = "";
-        std::ifstream file("www/search.html");
-        std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        str = replace(str, "[query]", req->GetQuery("q"));
-        try {
-          std::string _q = req->GetQuery("q");
-          _q = replace(_q, "_", "\\o");
-          std::vector<std::string> words = split(_q, " ");
-          std::string q = "SELECT * FROM sites WHERE (lang='en') AND (";
-          int x = 0;
-          for (std::string word: words) {
-            if (x == 0) {
-              if (word[0] == '-') {
-                q += " title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
-              } else {
-                q += " title LIKE '%" + word + "%' OR description LIKE '%" + word + "%' OR keywords LIKE '%" + word + "%'";
-              }
-            } else {
-              if (word[0] == '-') {
-                q += " OR title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
-              } else {
-                q += " OR title LIKE '%" + word + "%' OR description NOT LIKE '%" + word + "%' OR keywords NOT LIKE '%" + word + "%'";
-              }
-            }
-            x++;
-          }
-          if (x == 0) {
-            res->Send(compress("{\"error\":\"Could not parse terms!\"}"));
-            return;
-          }
-          sql::Statement* stmt = db->createStatement();
-          sql::ResultSet* res = stmt->executeQuery(q+") LIMIT 10");
-          int i = 0;
-          while (res->next()) {
-            data += "<a href=\"" + res->getString("url") + "\">" + res->getString("title") + "</a>\n";
-            data += "<span>" + res->getString("description") + "</span>\n";
-            data += "<span>" + res->getString("lang") + "</span>\n";
-            i++;
-          }
-          if (i == 0) {
-            data = "No results found!";
-          }
-        } catch (sql::SQLException &e) {
-          std::cout << "Error: " << e.what() << std::endl;
+        int page = 0;
+        if (req->GetQuery("page") != "") {
+          page = std::stoi(req->GetQuery("page"));
         }
-        str = replace(str, "[results]", data);
-        std::string compressed = compress(str);
+        std::string compressed = compress(getResults(req->GetQuery("q"), page));
         res->Send(compressed);
       }
     }
