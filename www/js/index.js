@@ -75,7 +75,7 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
       
         document.querySelector('.container>.suggestions').innerHTML = ""
         suggestions.forEach(suggestion => {
-          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion"><span class="query">${suggestion.replace(query, "<span>" + query + "</span>")}</span></div>`
+          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" onclick="window.location.href='/search?q=${suggestion}'"><span class="query">${suggestion.replace(query, "<span>" + query + "</span>")}</span></div>`
         })
       })
     })

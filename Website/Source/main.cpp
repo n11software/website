@@ -276,7 +276,7 @@ int main() {
           std::string _q = req->GetQuery("q");
           _q = replace(_q, "_", "\\o");
           std::vector<std::string> words = split(_q, " ");
-          std::string q = "SELECT * FROM sites WHERE";
+          std::string q = "SELECT * FROM sites WHERE (lang='en') AND (";
           int x = 0;
           for (std::string word: words) {
             if (x == 0) {
@@ -299,11 +299,12 @@ int main() {
             return;
           }
           sql::Statement* stmt = db->createStatement();
-          sql::ResultSet* res = stmt->executeQuery(q+" AND lang='en' LIMIT 10");
+          sql::ResultSet* res = stmt->executeQuery(q+") LIMIT 10");
           int i = 0;
           while (res->next()) {
             data += "<a href=\"" + res->getString("url") + "\">" + res->getString("title") + "</a>\n";
             data += "<span>" + res->getString("description") + "</span>\n";
+            data += "<span>" + res->getString("lang") + "</span>\n";
             i++;
           }
           if (i == 0) {
