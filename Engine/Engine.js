@@ -25,16 +25,7 @@ sql.connect(err => {
     console.log("Ready...")
 })
 
-let score = 0
-
-let proto, host, path
-let disallowed = [], allowed = []
-let sitemap = []
-let hasRobots = false
-
-let links = {}
-
-let addToQueue = (url, addScore) => {
+let addToQueue = (url, addScore, score) => {
     sql.query('SELECT * FROM queue WHERE domain = ? AND protocol = ? AND path = ?', [url.split('/')[2], url.split(':')[0], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length)], (err, res) => {
         if (err) console.log(err)
         if (res.length == 0) {
@@ -51,7 +42,7 @@ let addToQueue = (url, addScore) => {
     })
 }
 
-let addToIndex = (proto, host, path, content, title, description, keywords, language, pageScore) => {
+let addToIndex = (proto, host, path, content, title, description, keywords, language, pageScore, score) => {
     if (path == '') path = '/'
     else if (path.includes('#')) path = path.substring(0, path.indexOf('#'))
     sql.query('SELECT * FROM `index` WHERE domain = ? AND protocol = ? AND path = ?', [host, proto, path], (err, res) => {
@@ -76,9 +67,18 @@ function match(str, rule) {
     return new RegExp("^" + rule.split("*").map(escapeRegex).join(".*") + "$").test(str);
 }
 
-let engine = async () => {
+let engine = async RootURL => {
+    let score = 0
+
+    let proto, host, path
+    let disallowed = [], allowed = []
+    let sitemap = []
+    let hasRobots = false
+
+    let links = {}
+
     // Launch browser
-    let browser = await puppeteer.launch({headless: process.env.headless, args: [ '--window-size=1920,1080' ]})
+    let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
     let robots = async () => {
         // Get the contents of robots.txt
         let page = await browser.newPage()
@@ -119,16 +119,12 @@ let engine = async () => {
         if (host != url.split('/')[2]) {
             // Not owned by host (Add referer score later)
             // Add to queue with score
-            addToQueue(url, true)
+            addToQueue(url, true, score)
             links[url] = true
             return
         }
         let pageScore = 0
         path = url.substring(proto.length + 3 + host.length)
-        // Close all other pages
-        browser.pages().then(pages => {
-            pages[0].close()
-        })
         // Open the page
         let page = await browser.newPage()
         page.setViewport({ width: 1920, height: 1080 })
@@ -148,19 +144,28 @@ let engine = async () => {
 
         if (res.headers()['content-type'] != undefined && res.headers()['content-type'].includes('text/html')) {
             // Find all links and check if they are allowed by robots.txt
-            await page.$$('a').then(async e => {
-                for (link in e) {
-                    let href = (await (e[link].evaluate(el => el.href))).trim() // Get the href
-                    if (href.includes(':') && (!href.startsWith('http:') && !href.startsWith('https:') && !href.startsWith('ftp:'))) continue // Skip if it's not ftp, http or https
-                    if (href.startsWith('//')) href = proto + ':' + href // Fix protocol-less links
-                    else if (href.startsWith('/')) href = proto + '://' + host + href // Fix relative links
-                    else if (!href.startsWith('http')) href = proto + '://' + host + '/' + href // Fix relative links with no /
-                    if (href.startsWith('#')) continue // Ignore anchor links
-                    if (links[href] != undefined) continue // Ignore duplicate links
-                    if (allowed.find(val => match(href, val))) links[href] = false // Found matching allowed path in robots.txt
-                    if (disallowed.find(val => match(href, val)) == undefined) links[href] = false // Was not found in disallowed paths in robots.txt
-                }
-            })
+            try {
+                await page.$$('a').then(async e => {
+                    for (link in e) {
+                        try {
+                            let href = await (e[link].evaluate(el => el.href)) // Get the href
+                            href = href.trim() // Remove whitespace
+                            if (href.includes(':') && (!href.startsWith('http:') && !href.startsWith('https:') && !href.startsWith('ftp:'))) continue // Skip if it's not ftp, http or https
+                            if (href.startsWith('//')) href = proto + ':' + href // Fix protocol-less links
+                            else if (href.startsWith('/')) href = proto + '://' + host + href // Fix relative links
+                            else if (!href.startsWith('http')) href = proto + '://' + host + '/' + href // Fix relative links with no /
+                            if (href.startsWith('#')) continue // Ignore anchor links
+                            if (links[href] != undefined) continue // Ignore duplicate links
+                            if (allowed.find(val => match(href, val))) links[href] = false // Found matching allowed path in robots.txt
+                            if (disallowed.find(val => match(href, val)) == undefined) links[href] = false // Was not found in disallowed paths in robots.txt
+                        } catch (err) {
+                            console.log("[\x1b[31m-\x1b[0m] There was an issue at " + page.url() + "!")
+                        }
+                    }
+                })
+            } catch (err) {
+                console.log("[\x1b[31m-\x1b[0m] There was an issue at " + page.url() + "!")
+            }
             
 
             // Find all important data
@@ -169,15 +174,19 @@ let engine = async () => {
                 pageScore++
                 if (title.length > 10) pageScore++
             } else {
-                title = await page.$eval('h1', el => el.innerText)
-                if (!(title != undefined && title.length > 0)) title = await page.$eval('h2', el => el.innerText)
-                if (!(title != undefined && title.length > 0)) title = await page.$eval('h3', el => el.innerText)
-                if (!(title != undefined && title.length > 0)) title = await page.$eval('h4', el => el.innerText)
-                if (!(title != undefined && title.length > 0)) title = await page.$eval('h5', el => el.innerText)
-                if (!(title != undefined && title.length > 0)) title = await page.$eval('h6', el => el.innerText)
+                try {
+                    title = await page.$eval('h1', el => el.innerText)
+                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h2', el => el.innerText)
+                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h3', el => el.innerText)
+                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h4', el => el.innerText)
+                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h5', el => el.innerText)
+                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h6', el => el.innerText)
+                } catch (err) {
+                    console.log("[\x1b[31m-\x1b[0m] There was an issue at " + page.url() + "!")
+                }
             }
             
-            let content = await page.evaluate(() => (document.body.innerText.replaceAll('\n', ' ')).trim())
+            let content = await page.evaluate(() => (document.body.innerText.replaceAll('\n', ' ')).trim()).catch(err => "")
             
             let description = await page.$('meta[name="description"]').then(e => {
                 if (e != null) return e.getProperty('content').then(e => e.jsonValue())
@@ -192,17 +201,19 @@ let engine = async () => {
                 return e.getProperty('lang').then(e => e.jsonValue())
             }).catch(e => (res.headers()['content-language'] != undefined) ? res.headers()['content-language'] : 'N/A')
 
-            addToIndex(proto, host, path, content.substr(0, 1024), title, description, keywords, language, pageScore)
+            addToIndex(proto, host, path, content.substr(0, 1024), title, description, keywords, language, pageScore, score)
         }
 
         // Tell the engine that the page has been crawled
         links[url] = true
+        page.close()
     }
 
     let cycle = async () => {
         // Check if there are any links to crawl
         let queue = Object.keys(links).find(key => links[key] == false)
         if (queue == undefined) return // No links to crawl
+        links[queue] = true
 
         // Crawl the first link
         await crawler(queue)
@@ -222,11 +233,20 @@ let engine = async () => {
         console.log('Done')
     }
 
-    crawl(process.argv[2]) // Please only put the base url here
+    crawl(RootURL)
 }
 
-engine()
-
-// Go through each element in the links array and crawl it
-// If the crawler reaches the end of array check if there are any more links that are equal to false
-// if so repeat the process
+engine("https://en.wikipedia.org")
+engine("https://jp.wikipedia.org")
+engine("https://ru.wikipedia.org")
+engine("https://de.wikipedia.org")
+engine("https://fr.wikipedia.org")
+engine("https://it.wikipedia.org")
+engine("https://es.wikipedia.org")
+engine("https://pt.wikipedia.org")
+engine("https://nl.wikipedia.org")
+engine("https://pl.wikipedia.org")
+engine("https://zh.wikipedia.org")
+engine("https://sv.wikipedia.org")
+engine("https://vi.wikipedia.org")
+engine("https://ar.wikipedia.org")
