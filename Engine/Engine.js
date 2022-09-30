@@ -78,7 +78,7 @@ function match(str, rule) {
 
 let engine = async () => {
     // Launch browser
-    let browser = await puppeteer.launch({headless: false, args: [ '--window-size=1920,1080' ]})
+    let browser = await puppeteer.launch({headless: process.env.headless, args: [ '--window-size=1920,1080' ]})
     let robots = async () => {
         // Get the contents of robots.txt
         let page = await browser.newPage()
