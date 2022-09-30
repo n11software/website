@@ -9,6 +9,21 @@
 
 let { expect } = require('chai')
 let puppeteer = require('puppeteer')
+let mysql = require('mysql')
+require('dotenv').config()
+
+let sql = mysql.createConnection({
+    host: 'n11.dev',
+    user: process.env.USERNAME,
+    password: process.env.PASSWORD,
+    database: 'n11',
+    charset: 'utf8mb4'
+})
+
+sql.connect(err => {
+    if (err) throw err
+    console.log("Ready...")
+})
 
 let score = 0
 
@@ -18,6 +33,42 @@ let sitemap = []
 let hasRobots = false
 
 let links = {}
+
+let addToQueue = (url, addScore) => {
+    sql.query('SELECT * FROM queue WHERE domain = ? AND protocol = ? AND path = ?', [url.split('/')[2], url.split(':')[0], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length)], (err, res) => {
+        if (err) console.log(err)
+        if (res.length == 0) {
+            sql.query('INSERT INTO queue (protocol, domain, path, score) VALUES (?, ?, ?, ?)', [url.split(':')[0], url.split('/')[2], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length), addScore?1:0], (err, res) => {
+                if (err) console.log(err)
+                console.log("[\x1b[32m+\x1b[0m] Added to queue: " + url.split('/')[2])
+            })
+        } else {
+            sql.query('UPDATE queue SET score = ? WHERE domain = ? AND protocol = ? AND path = ?', [res[0].score+addScore?1:0, url.split('/')[2], url.split(':')[0], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length)], (err, res) => {
+                if (err) console.log(err)
+                console.log("[\x1b[32mU\x1b[0m] Updated queue: " + url.split('/')[2])
+            })
+        }
+    })
+}
+
+let addToIndex = (proto, host, path, content, title, description, keywords, language, pageScore) => {
+    if (path == '') path = '/'
+    else if (path.includes('#')) path = path.substring(0, path.indexOf('#'))
+    sql.query('SELECT * FROM `index` WHERE domain = ? AND protocol = ? AND path = ?', [host, proto, path], (err, res) => {
+        if (err) console.log(err)
+        if (res.length == 0) {
+            sql.query('INSERT INTO `index` (protocol, domain, path, content, title, description, keywords, language, time, updated, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [proto, host, path, content, title, description, keywords, language, +new Date, +new Date, pageScore+score], (err, res) => {
+                if (err) console.log(err)
+                console.log("[\x1b[32m+\x1b[0m] Added to index: " + host + path)
+            })
+        } else {
+            sql.query('UPDATE `index` SET content = ?, title = ?, description = ?, keywords = ?, language = ?, updated = ?, score = ? WHERE protocol = ? AND domain = ? AND path = ?', [content, title, description, keywords, language, +new Date, score+pageScore, proto, host, path], (err, res) => {
+                if (err) console.log(err)
+                console.log("[\x1b[32mU\x1b[0m] Updated index: " + host + path)
+            })
+        }
+    })
+}
 
 function match(str, rule) {
     str = str.split('?')[0] // Remove query string
@@ -35,6 +86,7 @@ let engine = async () => {
         page.setUserAgent("N11")
         let res = await page.goto(proto + "://" + host + '/robots.txt')
         if (res.status() === 200) {
+            score++
             hasRobots = true
             let robotstxt = await page.evaluate(() => document.body.innerText)
             
@@ -67,9 +119,11 @@ let engine = async () => {
         if (host != url.split('/')[2]) {
             // Not owned by host (Add referer score later)
             // Add to queue with score
+            addToQueue(url, true)
             links[url] = true
             return
         }
+        let pageScore = 0
         path = url.substring(proto.length + 3 + host.length)
         // Close all other pages
         browser.pages().then(pages => {
@@ -89,8 +143,8 @@ let engine = async () => {
         page.setDefaultNavigationTimeout(30*1000) // If the page doesn't load in 30 seconds, close it
         // Check how long it took to load and reward accordingly
         let ttl = await page.metrics()
-        if (ttl.TaskDuration <= 1.8) score++
-        else if (ttl.TaskDuration <= 3) score += 0.5
+        if (ttl.TaskDuration <= 1.8) pageScore++
+        else if (ttl.TaskDuration <= 3) pageScore += 0.5
 
         if (res.headers()['content-type'] != undefined && res.headers()['content-type'].includes('text/html')) {
             // Find all links and check if they are allowed by robots.txt
@@ -111,24 +165,34 @@ let engine = async () => {
 
             // Find all important data
             let title = await page.title()
-            console.log(title)
+            if (title != undefined && title.length > 0) {
+                pageScore++
+                if (title.length > 10) pageScore++
+            } else {
+                title = await page.$eval('h1', el => el.innerText)
+                if (!(title != undefined && title.length > 0)) title = await page.$eval('h2', el => el.innerText)
+                if (!(title != undefined && title.length > 0)) title = await page.$eval('h3', el => el.innerText)
+                if (!(title != undefined && title.length > 0)) title = await page.$eval('h4', el => el.innerText)
+                if (!(title != undefined && title.length > 0)) title = await page.$eval('h5', el => el.innerText)
+                if (!(title != undefined && title.length > 0)) title = await page.$eval('h6', el => el.innerText)
+            }
+            
+            let content = await page.evaluate(() => (document.body.innerText.replaceAll('\n', ' ')).trim())
+            
             let description = await page.$('meta[name="description"]').then(e => {
                 if (e != null) return e.getProperty('content').then(e => e.jsonValue())
+                else return content.substring(0, 160)
             }).catch(e => null)
-            console.log(description)
+            
             let keywords = await page.$('meta[name="keywords"]').then(e => {
                 if (e != null) e.getProperty('content').then(e => e.jsonValue())
             }).catch(e => null)
-            console.log(keywords)
-            let body = await page.evaluate(() => (document.body.innerText.replaceAll('\n', ' ')).trim())
-            console.log(body.substring(0, 1024))
-
-            let language = (res.headers()['content-language'] != undefined) ? res.headers()['content-language'] : 'N/A'
             
-            language = await page.$('html').then(e => {
+            let language = await page.$('html').then(e => {
                 return e.getProperty('lang').then(e => e.jsonValue())
-            }).catch(e => null)
-            console.log(language)
+            }).catch(e => (res.headers()['content-language'] != undefined) ? res.headers()['content-language'] : 'N/A')
+
+            addToIndex(proto, host, path, content.substr(0, 1024), title, description, keywords, language, pageScore)
         }
 
         // Tell the engine that the page has been crawled
@@ -155,8 +219,7 @@ let engine = async () => {
         await robots()
         await cycle()
         browser.close()
-        console.log(score)
-        console.log(links)
+        console.log('Done')
     }
 
     crawl(process.argv[2]) // Please only put the base url here
