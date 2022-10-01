@@ -10,6 +10,7 @@
 let { expect } = require('chai')
 let puppeteer = require('puppeteer')
 let mysql = require('mysql')
+require('./PuppeteerNetworkMonitor')
 require('dotenv').config()
 
 let sql = mysql.createConnection({
@@ -67,7 +68,15 @@ function match(str, rule) {
     return new RegExp("^" + rule.split("*").map(escapeRegex).join(".*") + "$").test(str);
 }
 
+// To do:
+//
+// Send the links to a table in the database with a code that corresponds to the crawler
+// Check another table beforehand to see what other crawlers are working on the same domain
+// If another one is working on it then we will send half the links to the other crawler
+// Also add global domain data to the table such as the score, proto, host, path, disallowed, allowed, sitemap, and hasRobots
+
 let engine = async RootURL => {
+    let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
     let score = 0
 
     let proto, host, path
@@ -78,7 +87,6 @@ let engine = async RootURL => {
     let links = {}
 
     // Launch browser
-    let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
     let robots = async () => {
         // Get the contents of robots.txt
         let page = await browser.newPage()
@@ -116,20 +124,15 @@ let engine = async RootURL => {
     }
 
     let crawler = async (url) => {
-        if (host != url.split('/')[2]) {
-            // Not owned by host (Add referer score later)
-            // Add to queue with score
-            addToQueue(url, true, score)
-            links[url] = true
-            return
-        }
         let pageScore = 0
         path = url.substring(proto.length + 3 + host.length)
         // Open the page
         let page = await browser.newPage()
         page.setViewport({ width: 1920, height: 1080 })
         page.setUserAgent("N11")
-        let res = await page.goto(url).catch(err => {
+        let res = await page.goto(url, {
+            waitUntil: "networkidle0"
+        }).catch(err => {
             console.log(err)
             links[url] = true
             page.close()
@@ -149,22 +152,21 @@ let engine = async RootURL => {
                     for (link in e) {
                         try {
                             let href = await (e[link].evaluate(el => el.href)) // Get the href
-                            href = href.trim() // Remove whitespace
                             if (href.includes(':') && (!href.startsWith('http:') && !href.startsWith('https:') && !href.startsWith('ftp:'))) continue // Skip if it's not ftp, http or https
                             if (href.startsWith('//')) href = proto + ':' + href // Fix protocol-less links
                             else if (href.startsWith('/')) href = proto + '://' + host + href // Fix relative links
                             else if (!href.startsWith('http')) href = proto + '://' + host + '/' + href // Fix relative links with no /
-                            if (href.startsWith('#')) continue // Ignore anchor links
+                            if (href.includes('#')) continue // Ignore anchor links
                             if (links[href] != undefined) continue // Ignore duplicate links
                             if (allowed.find(val => match(href, val))) links[href] = false // Found matching allowed path in robots.txt
                             if (disallowed.find(val => match(href, val)) == undefined) links[href] = false // Was not found in disallowed paths in robots.txt
                         } catch (err) {
-                            console.log("[\x1b[31m-\x1b[0m] There was an issue at " + page.url() + "!")
+                            console.log("[\x1b[31m-\x1b[0m] f There was an issue at " + page.url() + "!")
                         }
                     }
                 })
             } catch (err) {
-                console.log("[\x1b[31m-\x1b[0m] There was an issue at " + page.url() + "!")
+                console.log("[\x1b[31m-\x1b[0m] e There was an issue at " + page.url() + "!")
             }
             
 
@@ -182,7 +184,7 @@ let engine = async RootURL => {
                     if (!(title != undefined && title.length > 0)) title = await page.$eval('h5', el => el.innerText)
                     if (!(title != undefined && title.length > 0)) title = await page.$eval('h6', el => el.innerText)
                 } catch (err) {
-                    console.log("[\x1b[31m-\x1b[0m] There was an issue at " + page.url() + "!")
+                    console.log("[\x1b[31m-\x1b[0m] bruh There was an issue at " + page.url() + "!")
                 }
             }
             
@@ -216,7 +218,11 @@ let engine = async RootURL => {
         links[queue] = true
 
         // Crawl the first link
-        await crawler(queue)
+        if (host != queue.split('/')[2]) {
+            // Not owned by host (Add referer score later)
+            // Add to queue with score
+            addToQueue(queue, true, score)
+        } else await crawler(queue)
 
         // Repeat (until there are no more links to crawl)
         await cycle()
@@ -229,6 +235,7 @@ let engine = async RootURL => {
         links[url] = false
         await robots()
         await cycle()
+        console.log(links)
         browser.close()
         console.log('Done')
     }
@@ -236,17 +243,4 @@ let engine = async RootURL => {
     crawl(RootURL)
 }
 
-engine("https://en.wikipedia.org")
-engine("https://jp.wikipedia.org")
-engine("https://ru.wikipedia.org")
-engine("https://de.wikipedia.org")
-engine("https://fr.wikipedia.org")
-engine("https://it.wikipedia.org")
-engine("https://es.wikipedia.org")
-engine("https://pt.wikipedia.org")
-engine("https://nl.wikipedia.org")
-engine("https://pl.wikipedia.org")
-engine("https://zh.wikipedia.org")
-engine("https://sv.wikipedia.org")
-engine("https://vi.wikipedia.org")
-engine("https://ar.wikipedia.org")
+engine("https://twitter.com/POTUS")
