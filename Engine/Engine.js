@@ -235,7 +235,6 @@ let engine = async RootURL => {
         links[url] = false
         await robots()
         await cycle()
-        console.log(links)
         browser.close()
         console.log('Done')
     }
@@ -243,4 +242,10 @@ let engine = async RootURL => {
     crawl(RootURL)
 }
 
-engine("https://twitter.com/POTUS")
+engine("https://en.wikipedia.org/")
+
+// To do:
+//
+// Add a prompt to ask if we're starting a new crawl or joining a crawl
+// Then ask the url and print the code if new crawl
+// If not ask for the code
