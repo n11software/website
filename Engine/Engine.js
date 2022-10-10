@@ -68,15 +68,7 @@ function match(str, rule) {
     return new RegExp("^" + rule.split("*").map(escapeRegex).join(".*") + "$").test(str);
 }
 
-// To do:
-//
-// Send the links to a table in the database with a code that corresponds to the crawler
-// Check another table beforehand to see what other crawlers are working on the same domain
-// If another one is working on it then we will send half the links to the other crawler
-// Also add global domain data to the table such as the score, proto, host, path, disallowed, allowed, sitemap, and hasRobots
-
-let engine = async RootURL => {
-    let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
+let engine = async (RootURL, browser) => {
     let score = 0
 
     let proto, host, path
@@ -122,20 +114,22 @@ let engine = async RootURL => {
         }
         page.close()
     }
+    
+    let page = await browser.newPage()
 
     let crawler = async (url) => {
         let pageScore = 0
         path = url.substring(proto.length + 3 + host.length)
-        // Open the page
-        let page = await browser.newPage()
+        let closed = await page.isClosed()
+        if (closed) page = await browser.newPage()
         page.setViewport({ width: 1920, height: 1080 })
         page.setUserAgent("N11")
+        if (url.substring(url.length-4) == '.pdf') return
         let res = await page.goto(url, {
             waitUntil: "networkidle0"
         }).catch(err => {
             console.log(err)
             links[url] = true
-            page.close()
             return null
         })
         if (res == null) return
@@ -149,7 +143,7 @@ let engine = async RootURL => {
             // Find all links and check if they are allowed by robots.txt
             try {
                 await page.$$('a').then(async e => {
-                    for (link in e) {
+                    for (let link in e) {
                         try {
                             let href = await (e[link].evaluate(el => el.href)) // Get the href
                             if (href.includes(':') && (!href.startsWith('http:') && !href.startsWith('https:') && !href.startsWith('ftp:'))) continue // Skip if it's not ftp, http or https
@@ -208,7 +202,6 @@ let engine = async RootURL => {
 
         // Tell the engine that the page has been crawled
         links[url] = true
-        page.close()
     }
 
     let cycle = async () => {
@@ -235,17 +228,19 @@ let engine = async RootURL => {
         links[url] = false
         await robots()
         await cycle()
-        browser.close()
+        page.close()
         console.log('Done')
     }
 
     crawl(RootURL)
 }
 
-engine("https://en.wikipedia.org/")
-
-// To do:
-//
-// Add a prompt to ask if we're starting a new crawl or joining a crawl
-// Then ask the url and print the code if new crawl
-// If not ask for the code
+(async () => {
+    let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
+    browser.pages().then(async pages => {
+        for (let page in pages) {
+            await pages[page].close()
+        }
+    })
+    engine("https://www.whitehouse.gov/", browser)
+})()

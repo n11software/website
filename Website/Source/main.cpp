@@ -218,34 +218,17 @@ std::string getResults(std::string query, int page) {
     std::string _q = query;
     _q = replace(_q, "_", "\\o");
     std::vector<std::string> words = split(_q, " ");
-    std::string q = "SELECT * FROM sites WHERE (lang='en') AND (";
-    int x = 0;
-    for (std::string word: words) {
-      if (x == 0) {
-        if (word[0] == '-') {
-          q += " title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
-        } else {
-          q += " title LIKE '%" + word + "%' OR description LIKE '%" + word + "%' OR keywords LIKE '%" + word + "%'";
-        }
-      } else {
-        if (word[0] == '-') {
-          q += " OR title NOT LIKE '%" + word.substr(1) + "%' OR description NOT LIKE '%" + word.substr(1) + "%' OR keywords NOT LIKE '%" + word.substr(1) + "%'";
-        } else {
-          q += " OR title LIKE '%" + word + "%' OR description NOT LIKE '%" + word + "%' OR keywords NOT LIKE '%" + word + "%'";
-        }
-      }
-      x++;
-    }
-    if (x == 0) {
+    std::string q = "SELECT * FROM `index` WHERE (language='en' OR language='en-US') AND (";
+    if (words.size() == 0) {
       return "{\"error\":\"Could not parse terms!\"}";
     }
     sql::Statement* stmt = db->createStatement();
-    sql::ResultSet* res = stmt->executeQuery(q+") OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
+    sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%') OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
     int i = 0;
     while (res->next()) {
-      data += "<a href=\"" + res->getString("url") + "\">" + res->getString("title") + "</a>\n";
+      data += "<a href=\"" + res->getString("protocol") + "://" + res->getString("domain") + res->getString("path") + "\">" + res->getString("title") + "</a>\n";
       data += "<span>" + res->getString("description") + "</span>\n";
-      data += "<span>" + res->getString("lang") + "</span>\n";
+      data += "<span>" + res->getString("language") + "</span>\n";
       i++;
     }
     if (i == 0) {

@@ -61,6 +61,7 @@ body {
 
 .suggestion {
   padding: 5px 15px;
+  cursor: pointer;
 }
 
 .suggestion>span>span {
