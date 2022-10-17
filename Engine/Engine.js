@@ -235,6 +235,7 @@ let engine = async (RootURL, browser) => {
     crawl(RootURL)
 }
 
+
 (async () => {
     let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
     browser.pages().then(async pages => {
@@ -242,5 +243,5 @@ let engine = async (RootURL, browser) => {
             await pages[page].close()
         }
     })
-    engine("https://www.whitehouse.gov/", browser)
+    engine("https://en.wikipedia.org", browser)
 })()

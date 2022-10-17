@@ -226,9 +226,40 @@ std::string getResults(std::string query, int page) {
     sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%') OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
     int i = 0;
     while (res->next()) {
-      data += "<a href=\"" + res->getString("protocol") + "://" + res->getString("domain") + res->getString("path") + "\">" + res->getString("title") + "</a>\n";
-      data += "<span>" + res->getString("description") + "</span>\n";
-      data += "<span>" + res->getString("language") + "</span>\n";
+      std::string url = res->getString("protocol") + "://" + res->getString("domain");
+      std::string path;
+      if (res->getString("path").substr(0, 1) != "/") path = "/" + res->getString("path");
+      else path = res->getString("path");
+      url += path;
+      std::vector<std::string> files = split(path, "/");
+      std::string cite = "";
+      for (std::string file: files) {
+        if (cite == "") cite = "<span class=\"path\">";
+        if (file.find_first_of("?") != std::string::npos) {
+          std::vector<std::string> _file = split(file, "?");
+          if (_file.size() == 2) {
+            file = _file[0];
+            if (file.find_last_of(".") != std::string::npos) {
+              cite += " › " + file.substr(0, file.find_last_of("."));
+            } else cite += " › " + file;
+          } else {
+            cite += " › " + file;
+          }
+        } else {
+          if (file.find_last_of(".") != std::string::npos) {
+            cite += " › " + file.substr(0, file.find_last_of("."));
+          } else cite += " › " + file;
+        }
+        if (cite.length() > 47) {
+          cite = cite.substr(0, 47) + "...";
+          break;
+        }
+      }
+      if (cite != "") cite += "</span>";
+      data += "<div class=\"result\">";
+      data += "<a href=\"" + url + "\"><cite class=\"url\" role=\"text\">" + res->getString("protocol") + "://" + res->getString("domain") + cite + "</cite><span class=\"title\">" + res->getString("title") + "</span></a>\n";
+      data += "<span class=\"description\">" + res->getString("description") + "</span>\n";
+      data += "</div>\n";
       i++;
     }
     if (i == 0) {
