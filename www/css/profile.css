@@ -1,4 +1,12 @@
-.profile {
+/* .profile {
     width: 45px;
     height: 45px;
+} */
+
+.login {
+    color: [btntxt];
+    background-color: [btn];
+    padding: 0.5rem 2rem;
+    border-radius: 5px;
+    text-decoration: none;
 }

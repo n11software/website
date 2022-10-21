@@ -1,1 +1,2 @@
-document.querySelector('.profile').innerHTML = "<img src='https://lh3.googleusercontent.com/ogw/AOh-ky0i6mNu8ovOT9gR5HUoMrk6krYVJ2N-JGLpndPV=s32-c-mo' style='width: 100%; height: 100%; border-radius: 50%;'>"
+// document.querySelector('.profile').innerHTML = "<img src='https://lh3.googleusercontent.com/ogw/AOh-ky0i6mNu8ovOT9gR5HUoMrk6krYVJ2N-JGLpndPV=s32-c-mo' style='width: 100%; height: 100%; border-radius: 50%;'>"
+document.querySelector('.profile').innerHTML = "<a href=\"/login\" class=\"login\">Login</a>"
