@@ -31,19 +31,19 @@ body {
 
 .result .url {
     font-size: 14px;
-    color: #bdc1c6;
+    color: [subbtntxt];
     text-decoration: none;
     width: fit-content;
     font-style: normal;
 }
 
 .result .url  .path {
-    color: #969ba1;
+    color: [btntxt];
 }
 
 .result .title {
     font-size: 20px;
-    color: #8ab4f8;
+    color: [text];
     font-weight: 500;
     text-decoration: none;
     max-width: 600px;
@@ -54,7 +54,7 @@ body {
 
 .result .description {
     font-size: 14px;
-    color: #bdc1c6;
+    color: [subtext];
     width: 600px;
     text-decoration: none;
 }
