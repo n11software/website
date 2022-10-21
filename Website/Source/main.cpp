@@ -227,8 +227,8 @@ std::string getResults(std::string query, int page) {
     sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%')");
 
 
-    std::string pagesData = "<a href=\"/search?q=" + query + "&page=" + std::to_string(page) + "\" class=\"page\">Previous</a>";
     int pages = (res->rowsCount()/10)+1;
+    std::string pagesData = (page>0? "<a href=\"/search?q=" + query + "&page=" + std::to_string(page) + "\" class=\"page\">Previous</a>": "");
     if (page <= 4) {
       int max = 10;
       if (pages < 10) max = pages;
@@ -243,7 +243,7 @@ std::string getResults(std::string query, int page) {
         else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
       }
     }
-    pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(page+2) + "\" class=\"page\">Next</a>";
+    if (page+1<pages) pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(page+2) + "\" class=\"page\">Next</a>";
     str = replace(str, "[pages]", pagesData);
 
     stmt = db->createStatement();
