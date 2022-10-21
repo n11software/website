@@ -13,12 +13,13 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    margin-left: 6rem;
+    color: [text];
 }
 
 .result {
     display: flex;
     flex-direction: column;
-    margin-left: 6rem;
     max-width: 600px;
 }
 
@@ -118,6 +119,7 @@ body {
     outline: 0;
     position: absolute;
     top: 100%;
+    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
 }
   
 .suggestion {

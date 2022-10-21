@@ -55,13 +55,21 @@ document.querySelector('.edit-container').innerHTML = '\
 </div> \
 '
 
-document.querySelector('body').onmousemove = e => {
+document.body.onmousemove = e => {
   if (e.clientX > window.innerWidth - 100 && e.clientY > window.innerHeight - 100) {
     document.querySelector('.edit-button').style.animationDuration = "0.25s"
     document.querySelector('.edit-button').classList.remove("hidden")
   } else if (!themeEditorOpen) {
     document.querySelector('.edit-button').classList.add("hidden")
   }
+}
+
+window.onclick = e => {
+    if (document.querySelector('.edit-container').contains(e.target)) return
+    if (e.target.innerText == "Presets" || e.target.innerText == "Back") return
+    if (themeEditorOpen) {
+        document.querySelector('.edit-button').click()
+    }
 }
 
 document.querySelector('.edit-button').onclick = () => {

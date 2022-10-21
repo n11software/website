@@ -227,24 +227,28 @@ std::string getResults(std::string query, int page) {
     sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%')");
 
 
-    int pages = (res->rowsCount()/10)+1;
-    std::string pagesData = (page>0? "<a href=\"/search?q=" + query + "&page=" + std::to_string(page) + "\" class=\"page\">Previous</a>": "");
-    if (page <= 4) {
-      int max = 10;
-      if (pages < 10) max = pages;
-      for (int i = 1;i<=max;i++) {
-        if (page+1 == i) pagesData += "<span class=\"page\">" + std::to_string(i) + "</span>";
-        else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
+    if (res->rowsCount() > 0) {
+      int pages = (res->rowsCount()/10)+1;
+      std::string pagesData = (page>0? "<a href=\"/search?q=" + query + "&page=" + std::to_string(page) + "\" class=\"page\">Previous</a>": "");
+      if (page <= 4) {
+        int max = 10;
+        if (pages < 10) max = pages;
+        for (int i = 1;i<=max;i++) {
+          if (page+1 == i) pagesData += "<span class=\"page\">" + std::to_string(i) + "</span>";
+          else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
+        }
+      } else {
+        for (int i = page-4;i<=page+5;i++) {
+          if (i > pages) break;
+          if (page+1 == i) pagesData += "<span class=\"page\">" + std::to_string(i) + "</span>";
+          else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
+        }
       }
+      if (page+1<pages) pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(page+2) + "\" class=\"page\">Next</a>";
+      str = replace(str, "[pages]", pagesData);
     } else {
-      for (int i = page-4;i<=page+5;i++) {
-        if (i > pages) break;
-        if (page+1 == i) pagesData += "<span class=\"page\">" + std::to_string(i) + "</span>";
-        else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
-      }
+      str = replace(str, "[pages]", "");
     }
-    if (page+1<pages) pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(page+2) + "\" class=\"page\">Next</a>";
-    str = replace(str, "[pages]", pagesData);
 
     stmt = db->createStatement();
     res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%') OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
@@ -289,7 +293,7 @@ std::string getResults(std::string query, int page) {
       i++;
     }
     if (i == 0) {
-      data = "No results found!";
+      data = "<span class=\"nrf\">No results found!</span>";
     }
   } catch (sql::SQLException &e) {
     if (e.getErrorCode() == 2013) {

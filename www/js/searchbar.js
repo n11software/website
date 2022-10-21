@@ -35,6 +35,17 @@ document.querySelector('.container>input[type="text"]').onkeydown = key => {
 
 let prevVal = ""
 
+window.onclick = e => {
+  if (document.querySelector('.container').contains(e.target)) return
+  if (document.querySelector('.container>.suggestions').childElementCount > 0) {
+    document.querySelector('.container>input[type="text"]').style.borderBottom = "none"
+    document.querySelector('.container>input[type="text"]').style.borderRadius = "10px"
+    if (searchPage) document.querySelector('.container').style.borderRadius = "10px"
+    document.querySelector('.container>input[type="text"]').style.marginBottom = "0"
+    document.querySelector('.container>.suggestions').style.display = "none"
+  }
+}
+
 document.querySelector('.container>input[type="text"]').onkeyup = key => {
   if (key.keyCode === 40) {
     return
@@ -97,6 +108,15 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
 
 document.querySelector('.container>input[type="text"]').onfocus = () => {
   if (shadowsEnabled) document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.05)"
+  if (document.querySelector('.container>.suggestions').childElementCount > 0) {
+    document.querySelector('.container>input[type="text"]').style.borderBottom = "1px solid #ccc"
+    document.querySelector('.container>input[type="text"]').style.borderRadius = "10px 10px 0 0"
+    if (searchPage) {
+      document.querySelector('.container').style.borderRadius = "10px 10px 0 0"
+      document.querySelector('.container>.suggestions').style.borderRadius = "0px 0px 10px 10px"
+    }
+    document.querySelector('.container>.suggestions').style.display = "flex"
+  }
 }
 
 document.querySelector('.container>input[type="text"]').onblur = () => {
