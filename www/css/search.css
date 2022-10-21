@@ -134,4 +134,20 @@ body {
     gap: 1rem;
     margin: 2rem 6rem;
     color: [text];
+    width: 600px;
+    justify-content: center;
+}
+
+.page {
+    cursor: pointer;
+    text-decoration: none;
+    color: [subtext];
+}
+
+span.page {
+    color: [text];
+}
+
+.page:hover {
+    text-decoration: underline;
 }
