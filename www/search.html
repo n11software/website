@@ -5,15 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Fast and secure software.">
+    <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/search.css">
+    <link rel="stylesheet" href="css/profile.css">
   </head>
   <body>
       <div class="navbar">
-        <input type="text" placeholder="Search anything..." value="[query]" autocapitalize="false" autocomplete="false" spellcheck="false">
+        <div class="container">
+          <input type="text" placeholder="Search anything..." value="[query]" autocapitalize="false" autocomplete="false" spellcheck="false">
+          <div class="suggestions">
+            
+          </div>
+        </div>
+        <div class="profile">
+          
+        </div>
       </div>
       <div class="results">
         [results]
       </div>
-      <script src="js/search.js"></script>
+      <div class="pages">
+        [pages]
+      </div>
+      <div class="edit-container">
+        
+      </div>
+      <script>let searchPage = true</script>
+      <script src="js/theme.js"></script>
+      <script src="js/profile.js"></script>
+      <script src="js/searchbar.js"></script>
   </body>
 </html>

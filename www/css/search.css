@@ -6,21 +6,20 @@
 
 body {
     background-color: [background];
+    margin: 0;
 }
 
 .results {
     display: flex;
     flex-direction: column;
-}
-
-.result {
-    margin-bottom: 2rem;
+    gap: 2rem;
 }
 
 .result {
     display: flex;
     flex-direction: column;
     margin-left: 6rem;
+    max-width: 600px;
 }
 
 .result > a {
@@ -47,7 +46,10 @@ body {
     color: #8ab4f8;
     font-weight: 500;
     text-decoration: none;
-    width: fit-content;
+    max-width: 600px;
+    overflow: hidden;
+    white-space: nowrap; 
+    text-overflow: ellipsis;
 }
 
 .result .description {
@@ -59,4 +61,77 @@ body {
 
 .result > a:hover > .title {
     text-decoration: underline;
+}
+
+.navbar {
+    display: flex;
+    padding: 1rem 6rem;
+    background: [background];
+    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+    border-bottom: 1px solid [content];
+    /* [shadow] border-bottom: none; */
+    margin-bottom: 2rem;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.container {
+    position: relative;
+    border: none;
+    background-color: [content];
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+    transition: box-shadow 0.2s ease-in-out;
+    z-index: 10;
+}
+  
+.container > input[type="text"] {
+    height: 36px;
+    width: 500px;
+    padding: 5px 15px;
+    border-radius: 10px;
+    background-color: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    border: none;
+    font-size: large;
+    color: [text];
+    outline: 0;
+}
+  
+.container > input[type="text"]::placeholder {
+    color: [placeholder]
+}
+  
+.container > .suggestions {
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    min-width: 100%;
+    border: none;
+    font-size: large;
+    color: [subtext];
+    background-color: [content];
+    outline: 0;
+    position: absolute;
+    top: 100%;
+}
+  
+.suggestion {
+    padding: 5px 15px;
+    cursor: pointer;
+}
+  
+.suggestion>span>span {
+    color: [text];
+}
+
+.pages {
+    display: flex;
+    gap: 1rem;
+    margin: 2rem 6rem;
+    color: [text];
 }

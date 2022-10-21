@@ -1,0 +1,134 @@
+.edit-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.edit-relative {
+    position: relative;
+}
+
+.edit-button {
+    height: 1.5rem;
+    width: 1.5rem;
+    z-index: 30;
+    background-color: [content];
+    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+    color: [text];
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.edit-menu {
+    position: absolute;
+    bottom: 4rem;
+    right: 0;
+    background-color: [content];
+    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+    font-family: 'JetBrains Mono', monospace;
+    color: [text];
+    white-space: nowrap;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 200px;
+}
+
+.edit-menu > .title {
+    font-size: large;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.edit-menu > .edit-menu-item {
+    display: flex;
+    flex-direction: row;
+    color: [subtext];
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.edit-menu > .edit-menu-item > .wheel {
+    border: none;
+    background-color: transparent;
+    box-sizing: unset;
+    height: 15px;
+    width: 15px;
+    padding: 0;
+}
+
+.edit-menu > .edit-menu-item > .wheel::-webkit-color-swatch-wrapper {
+    border: none;
+    padding: 0;
+}
+
+.edit-menu > .edit-menu-item > .wheel::-webkit-color-swatch {
+    border: 1px solid [subtext];
+    border-radius: 5px;
+}
+
+.hidden {
+    opacity: 0;
+    animation: fade .25s linear;
+}
+
+.theme-button, .default-theme, .black-theme, .od-theme, .back-button {
+    font-size: medium;
+    border: none;
+    padding: 5px;
+    width: 100%;
+    border-radius: 5px;
+}
+
+.default-theme {
+    background-image: -webkit-linear-gradient(170deg, white 50%, black 50%);
+    color: white;
+    margin-bottom: 2px;
+}
+
+.default-theme span {
+    color: black;
+}
+
+.black-theme {
+    background-color: black;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.od-theme {
+    background-color: #282c34;
+    color: #abb2bf;
+    margin-bottom: 5px;
+}
+
+.preset-themes, .back-button {
+    background-color: [subbtn];
+    color: [subbtntxt];
+    margin-top: 10px;
+}
+
+.save-theme {
+    background-color: [btn];
+    margin-top: 5px;
+    color: [btntxt];
+}
+
+.checkbox {
+    accent-color: [btn];
+    border: 1px solid [subtext];
+    box-sizing: unset;
+    height: 15px;
+    width: 15px;
+    border-radius: 5px;
+}
+
+@keyframes fade {
+    0% { opacity: 1 }
+    100% { opacity: 0 }
+}

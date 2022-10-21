@@ -222,8 +222,14 @@ std::string getResults(std::string query, int page) {
     if (words.size() == 0) {
       return "{\"error\":\"Could not parse terms!\"}";
     }
+    
     sql::Statement* stmt = db->createStatement();
-    sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%') OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
+    sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%')");
+
+    str = replace(str, "[pages]", std::to_string(page+1) + " of " + std::to_string((res->rowsCount()/10)+1));
+
+    stmt = db->createStatement();
+    res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%') OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
     int i = 0;
     while (res->next()) {
       std::string url = res->getString("protocol") + "://" + res->getString("domain");
@@ -257,7 +263,9 @@ std::string getResults(std::string query, int page) {
       }
       if (cite != "") cite += "</span>";
       data += "<div class=\"result\">";
-      data += "<a href=\"" + url + "\"><cite class=\"url\" role=\"text\">" + res->getString("protocol") + "://" + res->getString("domain") + cite + "</cite><span class=\"title\">" + res->getString("title") + "</span></a>\n";
+      std::string title = res->getString("title");
+      if (replace(replace(res->getString("title"), " ", ""), "\n", "").length() <= 0) title = url;
+      data += "<a href=\"" + url + "\"><cite class=\"url\" role=\"text\">" + res->getString("protocol") + "://" + res->getString("domain") + cite + "</cite><span class=\"title\">" + title + "</span></a>\n";
       data += "<span class=\"description\">" + res->getString("description") + "</span>\n";
       data += "</div>\n";
       i++;
@@ -311,6 +319,15 @@ int main() {
     res->Send(compressed);
   });
 
+  Server.Get("/css/theme.css", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/css; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/css/theme.css");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
   // Return stylesheet for search
   Server.Get("/css/search.css", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/css; charset=utf-8");
@@ -321,21 +338,41 @@ int main() {
     res->Send(compressed);
   });
 
-  // Return javascript for index
-  Server.Get("/js/index.js", [](Request* req, Response* res) {
-    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+  // Return stylesheet for profile
+  Server.Get("/css/profile.css", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/css; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/js/index.js");
+    std::ifstream file("www/css/profile.css");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
   });
 
-  // Return javascript for index
-  Server.Get("/js/search.js", [](Request* req, Response* res) {
+  // Return javascript for searchbar
+  Server.Get("/js/searchbar.js", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/js/search.js");
+    std::ifstream file("www/js/searchbar.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  // Return javascript for profile
+  Server.Get("/js/profile.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/profile.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  // Return javascript for theming
+  Server.Get("/js/theme.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/theme.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
@@ -355,9 +392,10 @@ int main() {
       } else {
         int page = 0;
         if (req->GetQuery("page") != "") {
-          page = std::stoi(req->GetQuery("page"));
+          page = std::stoi(req->GetQuery("page"))-1;
         }
-        std::string compressed = compress(getResults(req->GetQuery("q"), page));
+        std::string data = getResults(req->GetQuery("q"), page);
+        std::string compressed = compress(data);
         res->Send(compressed);
       }
     }
