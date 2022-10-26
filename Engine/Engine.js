@@ -124,6 +124,24 @@ let engine = async (RootURL, browser) => {
         if (closed) page = await browser.newPage()
         page.setViewport({ width: 1920, height: 1080 })
         page.setUserAgent("N11")
+        let client = await page.target().createCDPSession();
+        await client.send('Network.setRequestInterception', {
+            patterns: [{
+                urlPattern: '*',
+                resourceType: 'Document',
+                interceptionStage: 'HeadersReceived'
+            }],
+        })
+        await client.on('Network.requestIntercepted', async e => {
+            let headers = e.responseHeaders || {};
+            let contentType = headers['content-type'] || headers['Content-Type'] || '';
+            let obj = {interceptionId: e.interceptionId};
+            if (!(contentType.indexOf('text/html') > -1 || contentType.indexOf('text/js') > -1 || contentType.indexOf('text/javascript') > -1 || contentType.indexOf('text/css') > -1 || contentType.indexOf('text/xml') > -1 || contentType.indexOf('application/json') > -1 || contentType.indexOf('application/xml') > -1)) {
+                obj['errorReason'] = 'BlockedByClient';
+            }
+
+            await client.send('Network.continueInterceptedRequest', obj);
+        })
         if (url.substring(url.length-4) == '.pdf') return
         let res = await page.goto(url, {
             waitUntil: "networkidle0"
@@ -145,7 +163,7 @@ let engine = async (RootURL, browser) => {
                 await page.$$('a').then(async e => {
                     for (let link in e) {
                         try {
-                            let href = await (e[link].evaluate(el => el.href)) // Get the href
+                            let href = await (e[link].evaluate(el => el.href.split('?')[0])) // Get the href
                             if (href.includes(':') && (!href.startsWith('http:') && !href.startsWith('https:') && !href.startsWith('ftp:'))) continue // Skip if it's not ftp, http or https
                             if (href.startsWith('//')) href = proto + ':' + href // Fix protocol-less links
                             else if (href.startsWith('/')) href = proto + '://' + host + href // Fix relative links
@@ -171,12 +189,10 @@ let engine = async (RootURL, browser) => {
                 if (title.length > 10) pageScore++
             } else {
                 try {
-                    title = await page.$eval('h1', el => el.innerText)
-                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h2', el => el.innerText)
-                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h3', el => el.innerText)
-                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h4', el => el.innerText)
-                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h5', el => el.innerText)
-                    if (!(title != undefined && title.length > 0)) title = await page.$eval('h6', el => el.innerText)
+                    await page.$('h1').then(val => val[0].evaluate(el => title = el.innerText))
+                    if (title == undefined || title.length == 0) {
+                        await page.$('p').then(val => val[0].evaluate(el => title = el.innerText))
+                    }
                 } catch (err) {
                     console.log("[\x1b[31m-\x1b[0m] bruh There was an issue at " + page.url() + "!")
                 }
@@ -197,7 +213,7 @@ let engine = async (RootURL, browser) => {
                 return e.getProperty('lang').then(e => e.jsonValue())
             }).catch(e => (res.headers()['content-language'] != undefined) ? res.headers()['content-language'] : 'N/A')
 
-            addToIndex(proto, host, path, content.substr(0, 1024), title, description, keywords, language, pageScore, score)
+            addToIndex(proto, host, path, content, title, description, keywords, language, pageScore, score)
         }
 
         // Tell the engine that the page has been crawled
@@ -243,5 +259,5 @@ let engine = async (RootURL, browser) => {
             await pages[page].close()
         }
     })
-    engine("https://en.wikipedia.org", browser)
+    engine("https://github.com", browser)
 })()

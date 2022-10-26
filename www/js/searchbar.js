@@ -61,12 +61,12 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
   }
   let query = document.querySelector('.container>input[type="text"]').value
   if (key.keyCode === 13) {
-    window.location.href = `/search?q=${query}`
+    window.location.href = `/search?q=${encodeURIComponent(query)}`
   }
   if (query == prevVal) return
   // Get suggestions
   if (query.length > 0) {
-    fetch(`${window.location.origin}/search?q=${query}&suggestions=true`).then(res => {
+    fetch(`${window.location.origin}/search?q=${encodeURIComponent(query)}&suggestions=true`).then(res => {
       let history = [], suggestions = [], images = []
       res.json().then(data => {
         history = data.history
@@ -92,7 +92,7 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
         suggestions.forEach(suggestion => {
           let display = suggestion.replace(query, "<span>" + query + "</span>").substring(0,42)
           if (display.length==42) display = display + "..."
-          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" href="${suggestion}" onclick="window.location.href='/search?q=${suggestion}'"><span class="query">${display}</span></div>`
+          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" href="${suggestion}" onclick="window.location.href='/search?q=${encodeURIComponent(suggestion)}'"><span class="query">${display}</span></div>`
         })
       })
     })

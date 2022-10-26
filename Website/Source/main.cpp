@@ -216,42 +216,45 @@ std::string getResults(std::string query, int page) {
   str = replace(str, "[query]", query);
   try {
     std::string _q = query;
-    _q = replace(_q, "_", "\\o");
+    _q = replace(_q, "_", "\\_");
+    _q = replace(_q, "%", "\\%");
     std::vector<std::string> words = split(_q, " ");
     std::string q = "SELECT * FROM `index` WHERE (language='en' OR language='en-US') AND (";
     if (words.size() == 0) {
       return "{\"error\":\"Could not parse terms!\"}";
     }
+
     
+    std::string srch = "match(content) against ('" + _q + "' IN NATURAL LANGUAGE MODE)";
     sql::Statement* stmt = db->createStatement();
-    sql::ResultSet* res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%')");
+    sql::ResultSet* res = stmt->executeQuery("SELECT * FROM `index` WHERE (language='en' OR language='en-US') AND ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%'))");
 
 
     if (res->rowsCount() > 0) {
-      int pages = (res->rowsCount()/10)+1;
-      std::string pagesData = (page>0? "<a href=\"/search?q=" + query + "&page=" + std::to_string(page) + "\" class=\"page\">Previous</a>": "");
+      int pages = ((res->rowsCount()-1)/10)+1;
+      std::string pagesData = (page>0? "<a href=\"/search?q=" + _q + "&page=" + std::to_string(page) + "\" class=\"page\">Previous</a>": "");
       if (page <= 4) {
         int max = 10;
         if (pages < 10) max = pages;
         for (int i = 1;i<=max;i++) {
           if (page+1 == i) pagesData += "<span class=\"page\">" + std::to_string(i) + "</span>";
-          else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
+          else pagesData += "<a href=\"/search?q=" + _q + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
         }
       } else {
         for (int i = page-4;i<=page+5;i++) {
           if (i > pages) break;
           if (page+1 == i) pagesData += "<span class=\"page\">" + std::to_string(i) + "</span>";
-          else pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
+          else pagesData += "<a href=\"/search?q=" + _q + "&page=" + std::to_string(i) + "\" class=\"page\">" + std::to_string(i) + "</a>";
         }
       }
-      if (page+1<pages) pagesData += "<a href=\"/search?q=" + query + "&page=" + std::to_string(page+2) + "\" class=\"page\">Next</a>";
+      if (page+1<pages) pagesData += "<a href=\"/search?q=" + _q + "&page=" + std::to_string(page+2) + "\" class=\"page\">Next</a>";
       str = replace(str, "[pages]", pagesData);
     } else {
       str = replace(str, "[pages]", "");
     }
 
     stmt = db->createStatement();
-    res = stmt->executeQuery(q+"title LIKE '%" + query + "%' OR description LIKE '%" + query + "%' OR keywords LIKE '%" + query + "%') OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
+    res = stmt->executeQuery("SELECT * FROM `index` WHERE (language='en' OR language='en-US') AND ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) order by ((domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%') AND "+srch+") desc OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
     int i = 0;
     while (res->next()) {
       std::string url = res->getString("protocol") + "://" + res->getString("domain");
