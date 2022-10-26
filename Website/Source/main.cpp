@@ -339,6 +339,26 @@ int main() {
     res->Send(compressed);
   });
 
+  // Return robots.txt
+  Server.Get("/robots.txt", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/text; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/robots.txt");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
+  // Return sitemap.xml
+  Server.Get("/sitemap.xml", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "application/xml; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/sitemap.xml");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
   // Return stylesheet for index
   Server.Get("/css/index.css", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/css; charset=utf-8");
