@@ -6,6 +6,8 @@
  * The frontend will handle the queue and will send the queue to the backend.
  */
 
+let limit = 5
+
 
 let { expect } = require('chai')
 let puppeteer = require('puppeteer')
@@ -27,18 +29,26 @@ sql.connect(err => {
 })
 
 let addToQueue = (url, addScore, score) => {
-    sql.query('SELECT * FROM queue WHERE domain = ? AND protocol = ? AND path = ?', [url.split('/')[2], url.split(':')[0], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length)], (err, res) => {
+    sql.query('SELECT * FROM queue WHERE domain = ?', [url.split('/')[2]], (err, res) => {
         if (err) console.log(err)
         if (res.length == 0) {
-            sql.query('INSERT INTO queue (protocol, domain, path, score) VALUES (?, ?, ?, ?)', [url.split(':')[0], url.split('/')[2], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length), addScore?1:0], (err, res) => {
+            sql.query('INSERT INTO queue (protocol, domain, score) VALUES (?, ?, ?)', [url.split(':')[0], url.split('/')[2], addScore?1:0], (err, res) => {
                 if (err) console.log(err)
                 console.log("[\x1b[32m+\x1b[0m] Added to queue: " + url.split('/')[2])
             })
         } else {
-            sql.query('UPDATE queue SET score = ? WHERE domain = ? AND protocol = ? AND path = ?', [res[0].score+addScore?1:0, url.split('/')[2], url.split(':')[0], url.substring(url.split(':')[0].length + 3 + url.split('/')[2].length)], (err, res) => {
-                if (err) console.log(err)
-                console.log("[\x1b[32mU\x1b[0m] Updated queue: " + url.split('/')[2])
-            })
+            if (url.split(':')[0] == "https" && res[0].protocol == "http") {
+                sql.query('UPDATE queue SET score = ?, protocol = ? WHERE domain = ?', [res[0].score+addScore?1:0, "https", url.split('/')[2]], (err, res) => {
+                    if (err) console.log(err)
+                    console.log("[\x1b[32mU\x1b[0m] Updated queue: " + url.split('/')[2])
+                })
+            } else {
+                sql.query('UPDATE queue SET score = ? WHERE domain = ?', [res[0].score+addScore?1:0, url.split('/')[2]], (err, res) => {
+                    if (err) console.log(err)
+                    console.log("[\x1b[32mU\x1b[0m] Updated queue: " + url.split('/')[2])
+                })
+            }
+            
         }
     })
 }
@@ -115,7 +125,7 @@ let engine = async (RootURL, browser) => {
         page.close()
     }
     
-    let page = await browser.newPage()
+    let page
 
     let crawler = async (url) => {
         let pageScore = 0
@@ -132,16 +142,20 @@ let engine = async (RootURL, browser) => {
                 interceptionStage: 'HeadersReceived'
             }],
         })
-        await client.on('Network.requestIntercepted', async e => {
-            let headers = e.responseHeaders || {};
-            let contentType = headers['content-type'] || headers['Content-Type'] || '';
-            let obj = {interceptionId: e.interceptionId};
-            if (!(contentType.indexOf('text/html') > -1 || contentType.indexOf('text/js') > -1 || contentType.indexOf('text/javascript') > -1 || contentType.indexOf('text/css') > -1 || contentType.indexOf('text/xml') > -1 || contentType.indexOf('application/json') > -1 || contentType.indexOf('application/xml') > -1)) {
-                obj['errorReason'] = 'BlockedByClient';
-            }
+        try {
+            await client.on('Network.requestIntercepted', async e => {
+                let headers = e.responseHeaders || {};
+                let contentType = headers['content-type'] || headers['Content-Type'] || '';
+                let obj = {interceptionId: e.interceptionId};
+                if (!(contentType.indexOf('text/html') > -1 || contentType.indexOf('text/js') > -1 || contentType.indexOf('text/javascript') > -1 || contentType.indexOf('text/css') > -1 || contentType.indexOf('text/xml') > -1 || contentType.indexOf('application/json') > -1 || contentType.indexOf('application/xml') > -1)) {
+                    obj['errorReason'] = 'BlockedByClient';
+                }
 
-            await client.send('Network.continueInterceptedRequest', obj);
-        })
+                await client.send('Network.continueInterceptedRequest', obj);
+            })
+        } catch (e) {
+            console.log(e)
+        }
         if (url.substring(url.length-4) == '.pdf') return
         let res = await page.goto(url, {
             waitUntil: "networkidle0"
@@ -239,25 +253,49 @@ let engine = async (RootURL, browser) => {
         
 
     let crawl = async (url) => {
+        page = await browser.newPage()
         proto = url.split(':')[0]
         host = url.split('/')[2]
         links[url] = false
         await robots()
         await cycle()
         page.close()
+        sql.query("UPDATE queue SET done = ? WHERE protocol = ? AND domain = ?", [true, proto, host], (err, res) => {
+            if (err) console.log(err)
+        })
+        sql.query('SELECT * FROM queue WHERE done = ? LIMIT 1', [false], (err, res) => {
+            if (err) console.log(err)
+            if (res.length == 0) {
+                console.log("No more links to crawl")
+                return
+            } else {
+                for (let i = 0; i < res.length; i++) {
+                    engine(res[i].protocol + "://" + res[i].domain, browser)
+                }
+            }
+        })
         console.log('Done')
     }
 
     crawl(RootURL)
 }
 
-
-(async () => {
+let Init = async () => {
     let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
-    browser.pages().then(async pages => {
-        for (let page in pages) {
-            await pages[page].close()
+    // browser.pages().then(async pages => {
+    //     pages[0].close()
+    // })
+    sql.query('SELECT * FROM queue WHERE done = ? LIMIT '+limit, [false], (err, res) => {
+        if (err) console.log(err)
+        if (res.length == 0) {
+            console.log("No more links to crawl")
+            return
+        } else {
+            for (let i = 0; i < res.length; i++) {
+                engine(res[i].protocol + "://" + res[i].domain, browser)
+            }
         }
     })
-    engine("https://github.com", browser)
-})()
+}
+
+Init()
