@@ -62,7 +62,8 @@
     "sstream": "cpp",
     "stop_token": "cpp",
     "thread": "cpp",
-    "link": "cpp"
+    "link": "cpp",
+    "chrono": "cpp"
   },
   "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
 }
