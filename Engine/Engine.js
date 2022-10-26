@@ -134,15 +134,15 @@ let engine = async (RootURL, browser) => {
         if (closed) page = await browser.newPage()
         page.setViewport({ width: 1920, height: 1080 })
         page.setUserAgent("N11")
-        let client = await page.target().createCDPSession();
-        await client.send('Network.setRequestInterception', {
-            patterns: [{
-                urlPattern: '*',
-                resourceType: 'Document',
-                interceptionStage: 'HeadersReceived'
-            }],
-        })
         try {
+            let client = await page.target().createCDPSession();
+            await client.send('Network.setRequestInterception', {
+                patterns: [{
+                    urlPattern: '*',
+                    resourceType: 'Document',
+                    interceptionStage: 'HeadersReceived'
+                }],
+            })
             await client.on('Network.requestIntercepted', async e => {
                 let headers = e.responseHeaders || {};
                 let contentType = headers['content-type'] || headers['Content-Type'] || '';

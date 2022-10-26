@@ -68,3 +68,15 @@ body {
 .suggestion>span>span {
   color: [text];
 }
+
+@media (max-width: 768px) {
+  
+  .container {
+    width: 80%;
+  }
+
+  .container > input[type="text"] {
+    width: 90%;
+  }
+
+}

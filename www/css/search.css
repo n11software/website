@@ -7,6 +7,7 @@
 body {
     background-color: [background];
     margin: 0;
+    width: 100vw;
 }
 
 .info {
@@ -33,14 +34,14 @@ body {
     display: flex;
     flex-direction: column;
     text-decoration: none;
-    width: fit-content;
+    max-width: fit-content;
 }
 
 .result .url {
     font-size: 14px;
     color: [subbtntxt];
     text-decoration: none;
-    width: fit-content;
+    max-width: fit-content;
     font-style: normal;
 }
 
@@ -62,7 +63,7 @@ body {
 .result .description {
     font-size: 14px;
     color: [subtext];
-    width: 600px;
+    max-width: 600px;
     text-decoration: none;
 }
 
@@ -142,7 +143,7 @@ body {
     gap: 1rem;
     margin: 2rem 6rem;
     color: [text];
-    width: 600px;
+    max-width: 600px;
     justify-content: center;
 }
 
@@ -158,4 +159,33 @@ span.page {
 
 .page:hover {
     text-decoration: underline;
+}
+
+@media (max-width: 850px) {
+    
+    .profile {
+        display: none;
+    }
+
+    .container {
+        width: 100%;
+        padding: 0 1rem;
+    }
+
+    .results {
+        margin: 1rem 1rem;
+    }
+
+    .info {
+        margin: 1rem;
+    }
+
+    .navbar {
+        padding: 1rem 1rem;
+    }
+
+    .container > input[type="text"] {
+        width: 100%;
+    }
+
 }

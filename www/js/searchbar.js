@@ -121,4 +121,11 @@ document.querySelector('.container>input[type="text"]').onfocus = () => {
 
 document.querySelector('.container>input[type="text"]').onblur = () => {
   if (shadowsEnabled) document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.025)"
+  if (document.querySelector('.container>.suggestions').childElementCount > 0) {
+    document.querySelector('.container>input[type="text"]').style.borderBottom = "none"
+    document.querySelector('.container>input[type="text"]').style.borderRadius = "10px"
+    if (searchPage) document.querySelector('.container').style.borderRadius = "10px"
+    document.querySelector('.container>input[type="text"]').style.marginBottom = "0"
+    document.querySelector('.container>.suggestions').style.display = "none"
+  }
 }

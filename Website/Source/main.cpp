@@ -140,7 +140,7 @@ int main() {
         if (req->GetQuery("page") != "") {
           page = std::stoi(req->GetQuery("page"))-1;
         }
-        std::string data = getResults(req->GetQuery("q"), page);
+        std::string data = getResults(req->GetQuery("q"), page, req->GetHeader("cookie"));
         std::string compressed = compress(data);
         res->Send(compressed);
       }

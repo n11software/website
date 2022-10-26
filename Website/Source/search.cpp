@@ -80,13 +80,14 @@ std::string getSuggestions(std::string term) {
   return compress(data);
 }
 
-std::string getResults(std::string query, int page) {
+std::string getResults(std::string query, int page, std::string cookies) {
   std::string data = query;
   std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
   if (query.length() <= 256) addSearchTerm(data);
   data = "";
   std::ifstream file("www/search.html");
   std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  str = theme(str, cookies);
   str = replace(str, "[query]", query);
   try {
     std::string _q = query;
@@ -176,7 +177,7 @@ std::string getResults(std::string query, int page) {
   } catch (sql::SQLException &e) {
     if (e.getErrorCode() == 2013) {
       connect();
-      return getResults(query, page);
+      return getResults(query, page, cookies);
     }
     std::cout << "Error: " << e.what() << std::endl;
   }
