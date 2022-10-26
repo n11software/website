@@ -230,10 +230,6 @@ std::string getResults(std::string query, int page) {
     sql::Statement* stmt = db->createStatement();
     sql::ResultSet* res = stmt->executeQuery("SELECT * FROM `index` WHERE (language='en' OR language='en-US') AND ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%'))");
     std::string info = std::to_string(res->rowsCount()) + " results in ";
-    auto stop = std::chrono::high_resolution_clock::now();
-    std::string time = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()/1000.0);
-    info += time.substr(0, time.find_last_of('.')+3) + "s";
-    str = replace(str, "[info]", info);
 
     if (res->rowsCount() > 0) {
       int pages = ((res->rowsCount()-1)/10)+1;
@@ -303,6 +299,10 @@ std::string getResults(std::string query, int page) {
     if (i == 0) {
       data = "<span class=\"nrf\">No results found!</span>";
     }
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::string time = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count()/1000.0);
+    info += time.substr(0, time.find_last_of('.')+3) + "s";
+    str = replace(str, "[info]", info);
   } catch (sql::SQLException &e) {
     if (e.getErrorCode() == 2013) {
       connect();
