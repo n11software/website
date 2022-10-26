@@ -469,6 +469,98 @@ int main() {
     res->SendFile("www/fonts/jbm.woff2");
   });
 
+  // Favicon
+  Server.Get("/android-chrome-192x192.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/android-chrome-192x192.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/android-chrome-512x512.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/android-chrome-512x512.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/apple-touch-icon.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/apple-touch-icon.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/browserconfig.xml", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "application/xml; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/browserconfig.xml");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/favicon-16x16.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/favicon-16x16.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/favicon-32x32.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/favicon-32x32.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/favicon.ico", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/x-icon; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/favicon.ico");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/mstile-150x150.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/mstile-150x150.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/safari-pinned-tab.png", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/png; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/safari-pinned-tab.png");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/site.webmanifest", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "application/manifest+json; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    res->SetHeader("Cache-Control", "private, max-age=86400, stale-while-revalidate=604800");
+    std::ifstream file("www/favicon/site.webmanifest");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
   std::cout << "Server running on port 3000" << std::endl;
   Server.Start();
   return 0;
