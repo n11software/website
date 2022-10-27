@@ -150,8 +150,11 @@ let engine = async (RootURL, browser) => {
                 if (!(contentType.indexOf('text/html') > -1 || contentType.indexOf('text/js') > -1 || contentType.indexOf('text/javascript') > -1 || contentType.indexOf('text/css') > -1 || contentType.indexOf('text/xml') > -1 || contentType.indexOf('application/json') > -1 || contentType.indexOf('application/xml') > -1)) {
                     obj['errorReason'] = 'BlockedByClient';
                 }
-
-                await client.send('Network.continueInterceptedRequest', obj);
+                try {
+                    await client.send('Network.continueInterceptedRequest', obj);
+                } catch (e) {
+                    console.log(e)
+                }
             })
         } catch (e) {
             console.log(e)
