@@ -293,7 +293,7 @@ let Init = async () => {
         } else {
             for (let i = 0; i < res.length; i++) {
                 engine(res[i].protocol + "://" + res[i].domain, browser)
-                sql.query("UPDATE queue SET done = ? WHERE protocol = ? AND domain = ?", [true, proto, host], (err, res) => {
+                sql.query("UPDATE queue SET done = ? WHERE protocol = ? AND domain = ?", [true, res[i].protocol, res[i].domain], (err, res) => {
                     if (err) console.log(err)
                 })
             }
