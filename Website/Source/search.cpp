@@ -80,7 +80,7 @@ std::string getSuggestions(std::string term) {
   return compress(data);
 }
 
-std::string getResults(std::string query, int page, std::string cookies) {
+std::string getResults(std::string query, int page, std::string cookies, std::string lang) {
   std::string data = query;
   std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
   if (query.length() <= 256) addSearchTerm(data);
@@ -98,7 +98,7 @@ std::string getResults(std::string query, int page, std::string cookies) {
     std::string srch = "match(content, description, keywords, title, domain, path) against ('" + _q + "' IN NATURAL LANGUAGE MODE)";
 
     sql::Statement* stmt = getConnection()->createStatement();
-    sql::ResultSet* res = stmt->executeQuery("SELECT SQL_CALC_FOUND_ROWS * FROM `index` WHERE (language='en' OR language='en-US') AND ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) order by ((domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) desc, (description LIKE '%"+_q+"%') desc, (title LIKE '%"+_q+"%') desc OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
+    sql::ResultSet* res = stmt->executeQuery("SELECT SQL_CALC_FOUND_ROWS * FROM `index` WHERE ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) order by (language LIKE '%"+lang+"%') desc, ((domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) desc, (description LIKE '%"+_q+"%') desc, (title LIKE '%"+_q+"%') desc OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
     int i = 0;
     while (res->next()) {
       std::string url = res->getString("protocol") + "://" + res->getString("domain");
@@ -177,7 +177,7 @@ std::string getResults(std::string query, int page, std::string cookies) {
   } catch (sql::SQLException &e) {
     if (e.getErrorCode() == 2013) {
       connect();
-      return getResults(query, page, cookies);
+      return getResults(query, page, cookies, lang);
     }
     std::cout << "Error: " << e.what() << std::endl;
   }

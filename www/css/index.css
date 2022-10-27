@@ -18,6 +18,26 @@ body {
   align-items: center;
 }
 
+.language {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  color: [text];
+}
+
+.language select {
+  color: [text];
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  -webkit-appearance: none;
+  background-color: transparent;
+  outline: none;
+}
+
 .container {
   position: relative;
   border: none;
