@@ -263,9 +263,6 @@ let engine = async (RootURL, browser) => {
         await robots()
         await cycle()
         page.close()
-        sql.query("UPDATE queue SET done = ? WHERE protocol = ? AND domain = ?", [true, proto, host], (err, res) => {
-            if (err) console.log(err)
-        })
         sql.query('SELECT * FROM queue WHERE done = ? LIMIT 1', [false], (err, res) => {
             if (err) console.log(err)
             if (res.length == 0) {
@@ -296,6 +293,9 @@ let Init = async () => {
         } else {
             for (let i = 0; i < res.length; i++) {
                 engine(res[i].protocol + "://" + res[i].domain, browser)
+                sql.query("UPDATE queue SET done = ? WHERE protocol = ? AND domain = ?", [true, proto, host], (err, res) => {
+                    if (err) console.log(err)
+                })
             }
         }
     })
