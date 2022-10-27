@@ -165,6 +165,9 @@ let engine = async (RootURL, browser) => {
             return null
         })
         if (res == null) return
+        page.on('dialog', async dialog => {
+            await dialog.dismiss()
+        })
         page.setDefaultNavigationTimeout(30*1000) // If the page doesn't load in 30 seconds, close it
         // Check how long it took to load and reward accordingly
         let ttl = await page.metrics()
