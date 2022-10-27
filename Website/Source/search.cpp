@@ -98,7 +98,7 @@ std::string getResults(std::string query, int page, std::string cookies) {
     std::string srch = "match(content, description, keywords, title, domain, path) against ('" + _q + "' IN NATURAL LANGUAGE MODE)";
 
     sql::Statement* stmt = getConnection()->createStatement();
-    sql::ResultSet* res = stmt->executeQuery("SELECT SQL_CALC_FOUND_ROWS * FROM `index` WHERE (language='en' OR language='en-US') AND ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) order by ((domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) desc OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
+    sql::ResultSet* res = stmt->executeQuery("SELECT SQL_CALC_FOUND_ROWS * FROM `index` WHERE (language='en' OR language='en-US') AND ("+srch+" OR (domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) order by ((domain LIKE '%"+_q+"%' OR path LIKE '%"+_q+"%')) desc, (description LIKE '%"+_q+"%') desc, (title LIKE '%"+_q+"%') desc OFFSET " + std::to_string(page*10) + " ROWS FETCH NEXT 10 ROWS ONLY");
     int i = 0;
     while (res->next()) {
       std::string url = res->getString("protocol") + "://" + res->getString("domain");
