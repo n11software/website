@@ -8,6 +8,9 @@
 
 let limit = 5
 
+let dbg = true // Disables queue
+let depth = 1 // How far the crawler will go
+
 
 let { expect } = require('chai')
 let puppeteer = require('puppeteer')
@@ -94,7 +97,11 @@ let engine = async (RootURL, browser) => {
         let page = await browser.newPage()
         page.setViewport({ width: 1920, height: 1080 })
         page.setUserAgent("N11")
-        let res = await page.goto(proto + "://" + host + '/robots.txt')
+        let res = await page.goto(proto + "://" + host + '/robots.txt').catch(err => {
+            console.log("[\x1b[31m-\x1b[0m] Failed to load " + proto + "://" + host)
+            return false
+        })
+        if (res == false) return false
         if (res.status() === 200) {
             score++
             hasRobots = true
@@ -131,7 +138,12 @@ let engine = async (RootURL, browser) => {
         let pageScore = 0
         path = url.substring(proto.length + 3 + host.length)
         let closed = await page.isClosed()
-        if (closed) page = await browser.newPage()
+        if (closed) {
+            page = await browser.newPage()
+            page.on('dialog', async dialog => {
+                await dialog.dismiss()
+            })
+        }
         page.setViewport({ width: 1920, height: 1080 })
         page.setUserAgent("N11")
         try {
@@ -145,6 +157,11 @@ let engine = async (RootURL, browser) => {
             })
             await client.on('Network.requestIntercepted', async e => {
                 let headers = e.responseHeaders || {};
+                let redir = headers['location'] || headers['Location'] || ''
+                if (redir != '') {
+                    addToQueue(proto + "://" + host, true, score)
+                    return false
+                }
                 let contentType = headers['content-type'] || headers['Content-Type'] || '';
                 let obj = {interceptionId: e.interceptionId};
                 if (!(contentType.indexOf('text/html') > -1 || contentType.indexOf('text/js') > -1 || contentType.indexOf('text/javascript') > -1 || contentType.indexOf('text/css') > -1 || contentType.indexOf('text/xml') > -1 || contentType.indexOf('application/json') > -1 || contentType.indexOf('application/xml') > -1)) {
@@ -163,14 +180,12 @@ let engine = async (RootURL, browser) => {
         let res = await page.goto(url, {
             waitUntil: "networkidle0"
         }).catch(err => {
-            console.log(err)
+            if (page.isClosed()) return null
+            console.log("[\x1b[31m-\x1b[0m] Failed to load " + url)
             links[url] = true
             return null
         })
         if (res == null) return
-        page.on('dialog', async dialog => {
-            await dialog.dismiss()
-        })
         page.setDefaultNavigationTimeout(30*1000) // If the page doesn't load in 30 seconds, close it
         // Check how long it took to load and reward accordingly
         let ttl = await page.metrics()
@@ -260,23 +275,28 @@ let engine = async (RootURL, browser) => {
 
     let crawl = async (url) => {
         page = await browser.newPage()
+        page.on('dialog', async dialog => {
+            await dialog.dismiss()
+        })
         proto = url.split(':')[0]
         host = url.split('/')[2]
         links[url] = false
-        await robots()
-        await cycle()
-        page.close()
-        sql.query('SELECT * FROM queue WHERE done = ? LIMIT 1', [false], (err, res) => {
-            if (err) console.log(err)
-            if (res.length == 0) {
-                console.log("No more links to crawl")
-                return
-            } else {
-                for (let i = 0; i < res.length; i++) {
-                    engine(res[i].protocol + "://" + res[i].domain, browser)
+        let noerr = await robots()
+        if (noerr != false) await cycle()
+        if (!dbg) {
+            page.close()
+            sql.query('SELECT * FROM queue WHERE done = ? LIMIT 1', [false], (err, res) => {
+                if (err) console.log(err)
+                if (res.length == 0) {
+                    console.log("No more links to crawl")
+                    return
+                } else {
+                    for (let i = 0; i < res.length; i++) {
+                        engine(res[i].protocol + "://" + res[i].domain, browser)
+                    }
                 }
-            }
-        })
+            })
+        }
         console.log('Done')
     }
 
@@ -285,9 +305,11 @@ let engine = async (RootURL, browser) => {
 
 let Init = async () => {
     let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
-    // browser.pages().then(async pages => {
-    //     pages[0].close()
-    // })
+    browser.pages().then(async pages => {
+        pages.forEach(async page => {
+            if (page.url() == "about:blank") page.close()
+        })
+    })
     sql.query('SELECT * FROM queue WHERE done = ? LIMIT '+limit, [false], (err, res) => {
         if (err) console.log(err)
         if (res.length == 0) {
@@ -304,4 +326,15 @@ let Init = async () => {
     })
 }
 
-Init()
+if (!dbg) Init()
+else {
+    (async () => {
+        let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
+        browser.pages().then(async pages => {
+            pages.forEach(async page => {
+                if (page.url() == "about:blank") page.close()
+            })
+        })
+        engine(process.argv[2], browser)
+    })()
+}
