@@ -74,9 +74,10 @@
       bar.appendChild(btn)
       document.body.prepend(bar)
     }
-
-    let lang = document.cookie.split('; ').find(row => row.startsWith('lang=')).split('=')[1]
-    document.querySelector('.language select').value = lang
+    
+    let lang = document.cookie.split('; ')
+    lang = lang.find(row => row.startsWith('lang='))
+    if (lang!=undefined) document.querySelector('.language select').value = lang.split('=')[1]
 
     document.querySelector('select').onchange = () => {
       document.cookie = "lang=" + document.querySelector('select').value + "; expires=Fri, 31 Dec 9999 23:59:59 GMT"
