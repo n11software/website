@@ -305,11 +305,11 @@ let engine = async (RootURL, browser) => {
 
 let Init = async () => {
     let browser = await puppeteer.launch({headless: process.env.HEADLESS=="true"? true: false, args: [ '--window-size=1920,1080' ]})
-    browser.pages().then(async pages => {
-        pages.forEach(async page => {
-            if (page.url() == "about:blank") page.close()
-        })
-    })
+    // browser.pages().then(async pages => {
+    //     pages.forEach(async page => {
+    //         if (page.url() == "about:blank") page.close()
+    //     })
+    // })
     sql.query('SELECT * FROM queue WHERE done = ? LIMIT '+limit, [false], (err, res) => {
         if (err) console.log(err)
         if (res.length == 0) {

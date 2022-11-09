@@ -9,6 +9,7 @@
 #include <theme.hpp>
 #include <db.hpp>
 #include <search.hpp>
+#include <api.hpp>
 
 int main() {
   connect();
@@ -123,6 +124,85 @@ int main() {
     std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
   });
+
+  // Return login
+  Server.Get("/login", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/html; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/login.html");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string accs = "";
+    sql::Statement* stmt = getConnection()->createStatement();
+    std::vector<std::string> cookies = split(req->GetHeader("cookie"), "; ");
+    std::string session = "";
+    for (std::string cookie: cookies) {
+      cookie = cookie.substr(0, cookie.length()-1);
+      if (cookie.substr(0,8) == "session=") {
+        session = cookie.substr(8);
+        break;
+      }
+    }
+    sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + session + "'");
+    // accs = "<div class=\"account\" onclick=\"LoginPreExisting(0)\"> \
+        <img src=\"/api/user/pfp?email=levicowan2005@icloud.com\"> \
+        <div class=\"info\"> \
+          <span class=\"name\">Levi Hicks</span> \
+          <span class=\"email\">levicowan2005@icloud.com</span> \
+        </div> \
+      </div>";
+    rs->next();
+    int i = 0;
+    for (std::string token: split(rs->getString("tokens"), ";")) {
+      rs = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
+      rs->next();
+      rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + rs->getString("uuid") + "'");
+      rs->next();
+      accs += "<div class=\"account\" onclick=\"LoginPreExisting(" + std::to_string(i) + ")\"> \
+          <img src=\"/api/user/pfp?email=" + rs->getString("email") + "\"> \
+          <div class=\"info\"> \
+            <span class=\"name\">" + rs->getString("firstname") + " " + rs->getString("lastname") + "</span> \
+            <span class=\"email\">" + rs->getString("email") + "</span> \
+          </div> \
+        </div>";
+      i++;
+    }
+    str = replace(str, "[acclist]", accs);
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  // Return javascript for login
+  Server.Get("/js/login.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/login.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  // Return javascript for sha512
+  Server.Get("/js/sha512.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/sha512.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  // Return css for login
+  Server.Get("/css/login.css", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/css; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/css/login.css");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  Server.Get("/api/user/exists", CheckUserExist);
+  Server.Get("/api/user/pfp", GetUserPFP);
 
   // Search Page
   Server.Get("/search", [](Request* req, Response* res) {

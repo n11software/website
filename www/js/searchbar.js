@@ -119,7 +119,8 @@ document.querySelector('.container>input[type="text"]').onfocus = () => {
   }
 }
 
-document.querySelector('.container>input[type="text"]').onblur = () => {
+document.querySelector('.container').onblur = () => {
+  if (document.querySelector('.container').contains(document.activeElement)) return
   if (shadowsEnabled) document.querySelector('.container').style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.025)"
   if (document.querySelector('.container>.suggestions').childElementCount > 0) {
     document.querySelector('.container>input[type="text"]').style.borderBottom = "none"
