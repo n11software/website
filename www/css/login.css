@@ -58,6 +58,12 @@ body {
   margin-right: 5px;
 }
 
+.input > svg.error-pass, .input > svg.success-pass {
+  height: 30px;
+  fill: black;
+  margin-right: 5px;
+}
+
 .forgot {
   color: #747b87;
   text-decoration: underline;

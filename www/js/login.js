@@ -106,7 +106,11 @@ let PasswordLogin = () => {
           + '<span>'+Response.FA[i]+'</span>'
           Selection.onclick = () => {
             CodeFAType = (Response.FA[i][1].length>0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(Response.FA[i])?"email":"phone")
-            CodeFAID = Response.FA[i][1]
+            CodeFAID = i
+            let RequestCode = new XMLHttpRequest()
+            RequestCode.open("POST", "/api/user/login", true)
+            RequestCode.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+            RequestCode.send("email="+Email+"&password="+document.querySelector("#password>.input>input").value+"&requestCode="+CodeFAID)
             CheckCodeMessage.innerHTML = CheckCodeMessage.innerHTML = "Please check your " + (CodeFAType=="email" ? "email" : "phone")
             ResendCodeMessage.innerHTML = ResendCodeMessage.innerHTML = "Didn't get a" + (CodeFAType=="email" ? "n email?" : " text?") + " <a>Resend</a>"
             SentCodeMessage.innerHTML = SentCodeMessage.innerHTML = CodeFARetry? "We've sent you a {new} code.": "We've sent you a code."
@@ -129,6 +133,15 @@ let PasswordLogin = () => {
         document.querySelector("#code-fa-select").appendChild(Back)
         document.getElementById("password").classList.toggle("hidden")
         document.getElementById("code-fa-select").classList.toggle("hidden")
+      } else if (Response.redir!=undefined) {
+        document.querySelector(".input>svg.error-pass").classList.add("hidden")
+        document.querySelector(".input>svg.success-pass").classList.remove("hidden")
+        window.location.href = Response.redir
+      } else if (Response.error!=undefined) {
+        if (Response.error == "Wrong email or password") {
+          document.querySelector(".input>svg.error-pass").classList.remove("hidden")
+          document.querySelector(".input>svg.success-pass").classList.add("hidden")
+        }
       }
     }
   }
@@ -177,7 +190,7 @@ let CodeFALogin = () => {
   let LoginAttempt = new XMLHttpRequest()
   LoginAttempt.open("POST", "/api/user/login", true)
   LoginAttempt.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-  LoginAttempt.send("email="+Email+"&password=" + document.querySelector("#password>.input>input").value + "&id=" + CodeFAID + "&code="+CodeFA1.value+CodeFA2.value+CodeFA3.value+CodeFA4.value)
+  LoginAttempt.send("email="+Email+"&password=" + document.querySelector("#password>.input>input").value + "&id=" + CodeFAID + "&code="+CodeFA1.value+CodeFA2.value+CodeFA3.value+CodeFA4.value + "&os="+os)
   console.log("email="+Email+"&password=" + document.querySelector("#password>.input>input").value + "&id=" + CodeFAID + "&code="+CodeFA1.value+CodeFA2.value+CodeFA3.value+CodeFA4.value)
   LoginAttempt.onreadystatechange = () => {
     if (LoginAttempt.readyState == 4) {
@@ -190,6 +203,17 @@ let CodeFALogin = () => {
       } else location.href = "/"
     }
   }
+}
+
+CodeFA1.onpaste = (e) => {
+  e.preventDefault()
+  let text = e.clipboardData.getData("text/plain")
+  CodeFA1.value = text[0]
+  CodeFA2.value = text[1]
+  CodeFA3.value = text[2]
+  CodeFA4.value = text[3]
+  CodeFA4.focus()
+  CodeFALogin()
 }
 
 CodeFA1.oninput = () => CodeFAChange(CodeFA1, CodeFA2)
