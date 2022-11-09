@@ -142,21 +142,31 @@ int main() {
         break;
       }
     }
+    std::cout << session << std::endl;
     sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + session + "'");
-    // accs = "<div class=\"account\" onclick=\"LoginPreExisting(0)\"> \
-        <img src=\"/api/user/pfp?email=levicowan2005@icloud.com\"> \
-        <div class=\"info\"> \
-          <span class=\"name\">Levi Hicks</span> \
-          <span class=\"email\">levicowan2005@icloud.com</span> \
-        </div> \
-      </div>";
-    rs->next();
+    if (!rs->next()) {
+      str = replace(str, "[nothidden]", "hidden");
+      str = replace(str, "[hidden]", "");
+      std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+      res->Send(compressed);
+      return;
+    }
+    str = replace(str, "[nothidden]", "");
+    str = replace(str, "[hidden]", "hidden");
     int i = 0;
     for (std::string token: split(rs->getString("tokens"), ";")) {
       rs = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
-      rs->next();
+      if (!rs->next()) {
+        // if token is invalid force relogin
+        res->Error(403);
+        return;
+      }
       rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + rs->getString("uuid") + "'");
-      rs->next();
+      if (!rs->next()) {
+        // if account is invalid force relogin
+        res->Error(403);
+        return;
+      }
       accs += "<div class=\"account\" onclick=\"LoginPreExisting(" + std::to_string(i) + ")\"> \
           <img src=\"/api/user/pfp?email=" + rs->getString("email") + "\"> \
           <div class=\"info\"> \

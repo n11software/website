@@ -103,14 +103,7 @@ body {
   margin-top: 8px;
   display: flex;
   width: 100%;
-}
-
-.buttons > a.button-secondary {
-  margin-right: 5px;
-}
-
-.buttons > a.button {
-  margin-left: 5px;
+  gap: 10px;
 }
 
 .signup {
