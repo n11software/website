@@ -1,10 +1,3 @@
-let browser;
-if (navigator.userAgent.match(/chrome|chromium|crios/i)) browser = "Chrome"
-else if (navigator.userAgent.match(/firefox|fxios/i)) browser = "Firefox"
-else if (navigator.userAgent.match(/safari/i)) browser = "Safari"
-else if (navigator.userAgent.match(/opr\//i)) browser = "Opera"
-else if (navigator.userAgent.match(/edg/i)) browser = "Edge"
-else browser = "Unknown"
 let os = navigator.platform=="Win32"? "Windows": navigator.platform=="MacIntel"? "Mac": navigator.platform=="Linux"? "Linux": navigator.platform=="Android"? "Android": navigator.platform=="iPhone"? "iOS": navigator.platform=="iPad"? "iOS": navigator.platform=="iPod"? "iOS": "Unknown"
 
 let CodeFAType
@@ -84,23 +77,39 @@ document.querySelector("#password>.input>input").onkeyup = (e) => {
   }
 }
 
+let CheckCodeMessage = document.getElementById("check-code")
+let ResendCodeMessage = document.getElementById("resend-code")
+let SentCodeMessage = document.getElementById("sent-code")
+
 let PasswordLogin = () => {
   let LoginAttempt = new XMLHttpRequest()
   LoginAttempt.open("POST", "/api/user/login", true)
   LoginAttempt.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-  LoginAttempt.send("email="+Email+"&password="+SHA512(document.querySelector("#password>.input>input").value)+"&browser="+browser+"&os="+os)
+  LoginAttempt.send("email="+Email+"&password="+document.querySelector("#password>.input>input").value+"&os="+os)
   LoginAttempt.onreadystatechange = () => {
     if (LoginAttempt.readyState == 4) {
       console.log(LoginAttempt.responseText)
       let Response = JSON.parse(LoginAttempt.responseText)
-      if (Response.PhoneNumbers!=undefined&&Response.PhoneNumbers.length>0) {
-        for (let i=0;i<Response.PhoneNumbers.length;i++) {
+      if (Response.FA!=undefined&&Response.FA.length>0) {
+        for (let i=0;i<Response.FA.length;i++) {
           let Selection = document.createElement("div")
           Selection.classList.add("select")
-          Selection.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg><span>'+Response.PhoneNumbers[i][0]+'</span>'
+          Selection.innerHTML = (Response.FA[i][1].length>0 &&
+             /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(Response.FA[i])?
+              '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"> \
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /> \
+              </svg>'
+             :
+              '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">\
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />\
+              </svg>')
+          + '<span>'+Response.FA[i]+'</span>'
           Selection.onclick = () => {
-            CodeFAType = "phone"
-            CodeFAID = Response.PhoneNumbers[i][1]
+            CodeFAType = (Response.FA[i][1].length>0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(Response.FA[i])?"email":"phone")
+            CodeFAID = Response.FA[i][1]
+            CheckCodeMessage.innerHTML = CheckCodeMessage.innerHTML = "Please check your " + (CodeFAType=="email" ? "email" : "phone")
+            ResendCodeMessage.innerHTML = ResendCodeMessage.innerHTML = "Didn't get a" + (CodeFAType=="email" ? "n email?" : " text?") + " <a>Resend</a>"
+            SentCodeMessage.innerHTML = SentCodeMessage.innerHTML = CodeFARetry? "We've sent you a {new} code.": "We've sent you a code."
             document.getElementById("code-fa-select").classList.toggle("hidden")
             document.getElementById("code-fa").classList.toggle("hidden")
             console.log(CodeFAID)
@@ -195,12 +204,3 @@ CodeFA4.onkeydown = (e) => {
 }
 
 document.querySelector("#code-fa>div.buttons>.button").onclick = () => CodeFALogin()
-
-let CheckCodeMessage = document.getElementById("check-code")
-let ResendCodeMessage = document.getElementById("resend-code")
-let SentCodeMessage = document.getElementById("sent-code")
-
-CheckCodeMessage.innerHTML = CheckCodeMessage.innerHTML.replace("{PhoneOrEmail}", CodeFAType == "email"? "email": "phone")
-ResendCodeMessage.innerHTML = ResendCodeMessage.innerHTML.replace("{PreCodeType}", CodeFAType == "email"? "an": "a")
-ResendCodeMessage.innerHTML = ResendCodeMessage.innerHTML.replace("{CodeType}", CodeFAType == "email"? "email": "text")
-SentCodeMessage.innerHTML = SentCodeMessage.innerHTML.replace("{new}", CodeFARetry? "new": "")

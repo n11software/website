@@ -128,7 +128,6 @@ int main() {
   // Return login
   Server.Get("/login", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/html; charset=utf-8");
-    res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/login.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string accs = "";
@@ -136,17 +135,17 @@ int main() {
     std::vector<std::string> cookies = split(req->GetHeader("cookie"), "; ");
     std::string session = "";
     for (std::string cookie: cookies) {
-      cookie = cookie.substr(0, cookie.length()-1);
+      if (cookie[cookie.length()-1] == '\r') cookie = cookie.substr(0, cookie.length()-1);
       if (cookie.substr(0,8) == "session=") {
         session = cookie.substr(8);
         break;
       }
     }
-    std::cout << session << std::endl;
     sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + session + "'");
     if (!rs->next()) {
       str = replace(str, "[nothidden]", "hidden");
       str = replace(str, "[hidden]", "");
+      res->SetHeader("Content-Encoding", "gzip");
       std::string compressed = compress(theme(str, req->GetHeader("cookie")));
       res->Send(compressed);
       return;
@@ -177,7 +176,8 @@ int main() {
       i++;
     }
     str = replace(str, "[acclist]", accs);
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->SetHeader("Content-Encoding", "gzip");
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -186,16 +186,6 @@ int main() {
     res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/js/login.js");
-    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
-    res->Send(compressed);
-  });
-
-  // Return javascript for sha512
-  Server.Get("/js/sha512.js", [](Request* req, Response* res) {
-    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
-    res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/js/sha512.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(theme(str, req->GetHeader("cookie")));
     res->Send(compressed);
@@ -213,6 +203,8 @@ int main() {
 
   Server.Get("/api/user/exists", CheckUserExist);
   Server.Get("/api/user/pfp", GetUserPFP);
+  Server.Post("/api/user/login", UserLogin);
+  Server.Get("/api/user/login", UserLogin);
 
   // Search Page
   Server.Get("/search", [](Request* req, Response* res) {
