@@ -64,7 +64,8 @@
     "thread": "cpp",
     "link": "cpp",
     "chrono": "cpp",
-    "sha512": "cpp"
+    "sha512": "cpp",
+    "codecvt": "cpp"
   },
   "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
 }

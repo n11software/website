@@ -66,7 +66,15 @@ static void sendMessage(std::string code, std::string email) {
 	try {
 
 		// Request user to enter an URL
-		vmime::utility::url url("smtp", "mail.n11.dev", 587, "", "2fa@n11.dev", "TempPassword");
+    std::ifstream file("2fa.txt");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string pass;
+    for (std::string line: split(str, "\n")) {
+      if (line.find("SMTP_PASS=") != std::string::npos) {
+        pass = line.substr(10);
+      }
+    }
+		vmime::utility::url url("smtp", "mail.n11.dev", 587, "", "2fa@n11.dev", pass);
 		vmime::shared_ptr <vmime::net::transport> tr;
 
     tr = g_session->getTransport(url);
@@ -101,6 +109,23 @@ static void sendMessage(std::string code, std::string email) {
 		std::cerr << "std::exception: " << e.what() << std::endl;
 		throw;
 	}
+}
+
+#include <twilio.hpp>
+void sendSMS(std::string code, std::string number) {
+  std::string res;
+  std::ifstream file("2fa.txt");
+  std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  std::string api, key;
+  for (std::string line: split(str, "\n")) {
+    if (line.find("TWILIO=") != std::string::npos) {
+      api = line.substr(7);
+    } else if (line.find("TWILIO_KEY=") != std::string::npos) {
+      key = line.substr(11);
+    }
+  }
+  auto twilio = std::make_shared<twilio::Twilio>(api, key);
+  twilio->send_message(number, "8176702119", "Your N11 verification code is: " + code, res, "", false);
 }
 
 int CreateSession(Request* req, Response* res, std::string uuid) {
@@ -145,7 +170,13 @@ void UserLogin(Request* req, Response* res) {
         // Send email or sms
         std::string code = generateCode(4, req->GetSocket());
         getConnection()->createStatement()->execute("UPDATE accounts SET 2facode = '" + code + "' WHERE uuid = '" + rs->getString("uuid") + "'");
-        if ((rs->getString("2fat") == "p" || rs->getString("2fat") == "b") && req->GetFormParam("requestCode") == "0") sendMessage(code, req->GetFormParam("email"));
+        if ((rs->getString("2fat") == "e" || rs->getString("2fat") == "b") && req->GetFormParam("requestCode") == "0") sendMessage(code, req->GetFormParam("email"));
+        else if ((rs->getString("2fat") == "p" || rs->getString("2fat") == "b") && req->GetFormParam("requestCode") != "0") {
+          int x = atoi(req->GetFormParam("requestCode").c_str());
+          if (rs->getString("2fat") == "b") x--;
+          std::string phone = split(rs->getString("phonenumbers"),";")[x];
+          sendSMS(code, phone);
+        }
         res->Send(compress("sending"));
       } else if (req->GetFormParam("code")=="") {
         // Show emails and phones
@@ -171,7 +202,7 @@ void UserLogin(Request* req, Response* res) {
         // Check code
         if (req->GetFormParam("code") == rs->getString("2facode")) {
           CreateSession(req, res, rs->getString("uuid"));
-          res->Send(compress("Logged In..."));
+          res->Send(compress("{\"success\": true}"));
         } else {
           res->Send(compress("{\"error\":\"Invalid code\"}"));
         }
@@ -179,7 +210,7 @@ void UserLogin(Request* req, Response* res) {
     } else {
       // Login
       int user = CreateSession(req, res, rs->getString("uuid"));
-      res->Send(compress("{\"redir\": \"/u/" + std::to_string(user) + "\"}"));
+      res->Send(compress("{\"redir\": \"/?u=" + std::to_string(user) + "\"}"));
     }
   } else {
     res->SetStatus("401 Unauthorized");

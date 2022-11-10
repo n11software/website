@@ -81,6 +81,14 @@ let CheckCodeMessage = document.getElementById("check-code")
 let ResendCodeMessage = document.getElementById("resend-code")
 let SentCodeMessage = document.getElementById("sent-code")
 
+let resendCode = () => {
+  let RequestCode = new XMLHttpRequest()
+  RequestCode.open("POST", "/api/user/login", true)
+  RequestCode.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+  RequestCode.send("email="+Email+"&password="+document.querySelector("#password>.input>input").value+"&requestCode="+CodeFAID)
+  SentCodeMessage.innerHTML = "We've sent you a new code."
+}
+
 let PasswordLogin = () => {
   let LoginAttempt = new XMLHttpRequest()
   LoginAttempt.open("POST", "/api/user/login", true)
@@ -88,7 +96,6 @@ let PasswordLogin = () => {
   LoginAttempt.send("email="+Email+"&password="+document.querySelector("#password>.input>input").value+"&os="+os)
   LoginAttempt.onreadystatechange = () => {
     if (LoginAttempt.readyState == 4) {
-      console.log(LoginAttempt.responseText)
       let Response = JSON.parse(LoginAttempt.responseText)
       if (Response.FA!=undefined&&Response.FA.length>0) {
         for (let i=0;i<Response.FA.length;i++) {
@@ -106,17 +113,17 @@ let PasswordLogin = () => {
           + '<span>'+Response.FA[i]+'</span>'
           Selection.onclick = () => {
             CodeFAType = (Response.FA[i][1].length>0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(Response.FA[i])?"email":"phone")
+            CodeFA1.focus()
             CodeFAID = i
             let RequestCode = new XMLHttpRequest()
             RequestCode.open("POST", "/api/user/login", true)
             RequestCode.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
             RequestCode.send("email="+Email+"&password="+document.querySelector("#password>.input>input").value+"&requestCode="+CodeFAID)
-            CheckCodeMessage.innerHTML = CheckCodeMessage.innerHTML = "Please check your " + (CodeFAType=="email" ? "email" : "phone")
-            ResendCodeMessage.innerHTML = ResendCodeMessage.innerHTML = "Didn't get a" + (CodeFAType=="email" ? "n email?" : " text?") + " <a>Resend</a>"
-            SentCodeMessage.innerHTML = SentCodeMessage.innerHTML = CodeFARetry? "We've sent you a {new} code.": "We've sent you a code."
+            CheckCodeMessage.innerHTML = "Please check your " + (CodeFAType=="email" ? "email" : "phone")
+            ResendCodeMessage.innerHTML = "Didn't get a" + (CodeFAType=="email" ? "n email?" : " text?") + " <a onclick=\"resendCode()\">Resend</a>"
+            SentCodeMessage.innerHTML = CodeFARetry? "We've sent you a new code.": "We've sent you a code."
             document.getElementById("code-fa-select").classList.toggle("hidden")
             document.getElementById("code-fa").classList.toggle("hidden")
-            console.log(CodeFAID)
           }
           document.querySelector("#code-fa-select").appendChild(Selection)
         }
@@ -191,13 +198,10 @@ let CodeFALogin = () => {
   LoginAttempt.open("POST", "/api/user/login", true)
   LoginAttempt.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
   LoginAttempt.send("email="+Email+"&password=" + document.querySelector("#password>.input>input").value + "&id=" + CodeFAID + "&code="+CodeFA1.value+CodeFA2.value+CodeFA3.value+CodeFA4.value + "&os="+os)
-  console.log("email="+Email+"&password=" + document.querySelector("#password>.input>input").value + "&id=" + CodeFAID + "&code="+CodeFA1.value+CodeFA2.value+CodeFA3.value+CodeFA4.value)
   LoginAttempt.onreadystatechange = () => {
     if (LoginAttempt.readyState == 4) {
-      console.log(LoginAttempt.responseText)
       let Response = JSON.parse(LoginAttempt.responseText)
       if (Response.error!=undefined) {
-        SentCodeMessage.innerHTML = "We've sent you a new code."
         document.getElementById("code-fa-error").innerText = "Invalid code."
         CodeFAError()
       } else location.href = "/"
