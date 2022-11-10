@@ -145,6 +145,7 @@ int main() {
     if (!rs->next()) {
       str = replace(str, "[nothidden]", "hidden");
       str = replace(str, "[hidden]", "");
+      res->SetHeader("Content-Encoding", "gzip");
       std::string compressed = compress(theme(str, req->GetHeader("cookie")));
       res->Send(compressed);
       return;
@@ -157,14 +158,14 @@ int main() {
       if (!rs->next()) {
         // if token is invalid force relogin
         res->Error(403);
-        res->Send("You have been logged out!");
+        res->Send(compress("You have been logged out!"));
         return;
       }
       rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + rs->getString("uuid") + "'");
       if (!rs->next()) {
         // if account is invalid force relogin
         res->Error(403);
-        res->Send("One of the accounts was deleted!");
+        res->Send(compress("One of the accounts was deleted!"));
         return;
       }
       accs += "<div class=\"account\" onclick=\"LoginPreExisting(" + std::to_string(i) + ")\"> \
@@ -177,7 +178,9 @@ int main() {
       i++;
     }
     str = replace(str, "[acclist]", accs);
-    res->Send(str);
+    res->SetHeader("Content-Encoding", "gzip");
+    std::string compressed = compress(str);
+    res->Send(compressed);
   });
 
   // Return javascript for login
