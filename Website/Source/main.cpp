@@ -145,7 +145,6 @@ int main() {
     if (!rs->next()) {
       str = replace(str, "[nothidden]", "hidden");
       str = replace(str, "[hidden]", "");
-      res->SetHeader("Content-Encoding", "gzip");
       std::string compressed = compress(theme(str, req->GetHeader("cookie")));
       res->Send(compressed);
       return;
@@ -178,7 +177,6 @@ int main() {
       i++;
     }
     str = replace(str, "[acclist]", accs);
-    res->SetHeader("Content-Encoding", "gzip");
     std::string compressed = compress(str);
     res->Send(compressed);
   });
