@@ -177,8 +177,7 @@ int main() {
       i++;
     }
     str = replace(str, "[acclist]", accs);
-    std::string compressed = compress(str);
-    res->Send(compressed);
+    res->Send(str);
   });
 
   // Return javascript for login
