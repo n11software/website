@@ -8,5 +8,6 @@ cp Website/website /web/n11.dev/Link
 cp -R www /web/n11.dev/www
 cp -R pfp /web/n11.dev/pfp
 cp db.txt /web/n11.dev/db.txt
+cp 2fa.txt /web/n11.dev/2fa.txt
 chown -R web:web /web/n11.dev/
 systemctl start n11.dev
