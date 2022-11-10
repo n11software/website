@@ -28,6 +28,17 @@ body {
   }
 }
 
+.titles {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.titles > .input-title {
+  width: 100%;
+}
+
 .input-title {
   font-size: 14px;
   margin-bottom: 10px;
@@ -44,21 +55,32 @@ body {
   text-align: center;
 }
 
-.input {
+.input, .input-name {
   border: 1px solid #e3e4e8;
   border-radius: 7px;
   margin-bottom: 6px;
   display: flex;
+  gap: 10px;
+  border-radius: 5px;
 }
 
-.input > input {
+.input > input, .input-name > input {
   border: none;
   background-color: transparent;
   font-size: 18px;
   color: #393f48;
   padding: 5px 10px;
+  border-radius: 7px;
   width: 100%;
   outline: none;
+}
+
+.input-name > input {
+  border: 1px solid #e3e4e8;
+}
+
+.input-name {
+  border: none;
 }
 
 .input > svg.error, .input > svg.success {

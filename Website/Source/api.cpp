@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <vector>
 #include <string.h>
 #include <stdio.h>
 #include <chrono>
@@ -28,8 +30,14 @@ void GetUserPFP(Request* req, Response* res) {
   if (rs->next()) {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("pfp/" + rs->getString("uuid") + ".png");
-    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    res->Send(compress(str));
+    if (file.good()) {
+      std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+      res->Send(compress(str));
+    } else {
+      std::ifstream file("pfp/default.png");
+      std::string defaultimg((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+      res->Send(compress(defaultimg));
+    }
   } else {
     res->Error(404);
   }
@@ -103,7 +111,7 @@ static void sendMessage(std::string code, std::string email) {
 		tr->disconnect();
 
 	} catch (vmime::exception& e) {
-		throw;
+		throw e;
 	} catch (std::exception& e) {
 		std::cerr << std::endl;
 		std::cerr << "std::exception: " << e.what() << std::endl;
@@ -215,5 +223,44 @@ void UserLogin(Request* req, Response* res) {
   } else {
     res->SetStatus("401 Unauthorized");
     res->Send(compress("{\"error\":\"Wrong email or password\"}"));
+  }
+}
+
+void UserCreate(Request* req, Response* res) {
+  res->SetHeader("Content-Type", "application/json; charset=utf-8");
+  res->SetHeader("Content-Encoding", "gzip");
+  sql::Statement* stmt = getConnection()->createStatement();
+  sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM accounts WHERE email = '" + req->GetFormParam("email") + "'");
+  if (rs->next()) {
+    res->SetStatus("401 Unauthorized");
+    res->Send(compress("{\"error\":\"Email already exists\"}"));
+  } else {
+    if (req->GetFormParam("code") != "") {
+      // Check if code is valid
+      rs = stmt->executeQuery("SELECT * FROM code WHERE email = '" + req->GetFormParam("email") + "' AND code = '" + req->GetFormParam("code") + "'");
+      if (rs->next()) {
+        if (req->GetFormParam("password") != "") {
+          // Create account
+          std::string uuid = generateUUID(32, req->GetSocket());
+          stmt->execute("INSERT INTO accounts (uuid, email, firstname, lastname, password, 2fa, 2fat, 2facode) VALUES ('" + uuid + "', '" + req->GetFormParam("email") + "', '"+req->GetFormParam("first")+"', '"+req->GetFormParam("last")+"', '" + SHA512::hash(req->GetFormParam("password")) + "', 0, '', '')");
+          int z = CreateSession(req, res, uuid);
+          res->Send(compress("{\"user\": "+std::to_string(z)+"}"));
+        } else res->Send(compress("{\"success\": true}"));
+      } else {
+        res->SetStatus("401 Unauthorized");
+        res->Send(compress("{\"error\":\"Invalid code\"}"));
+      }
+    } else {
+      std::string code = generateCode(4, req->GetSocket());
+      stmt = getConnection()->createStatement();
+      rs = stmt->executeQuery("SELECT * FROM code WHERE email = '" + req->GetFormParam("email") + "'");
+      if (rs->next()) {
+        stmt->execute("UPDATE code SET code = '" + code + "' WHERE email = '" + req->GetFormParam("email") + "'");
+      } else {
+        stmt->execute("INSERT INTO code (email, code) VALUES ('" + req->GetFormParam("email") + "', '" + code + "')");
+      }
+      sendMessage(code, req->GetFormParam("email"));
+      res->Send(compress("sending"));
+    }
   }
 }

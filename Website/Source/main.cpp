@@ -158,12 +158,14 @@ int main() {
       if (!rs->next()) {
         // if token is invalid force relogin
         res->Error(403);
+        res->Send("You have been logged out!");
         return;
       }
       rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + rs->getString("uuid") + "'");
       if (!rs->next()) {
         // if account is invalid force relogin
         res->Error(403);
+        res->Send("One of the accounts was deleted!");
         return;
       }
       accs += "<div class=\"account\" onclick=\"LoginPreExisting(" + std::to_string(i) + ")\"> \
@@ -201,10 +203,30 @@ int main() {
     res->Send(compressed);
   });
 
+  // Return signup
+  Server.Get("/signup", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/html; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/signup.html");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
+  // Return javascript for login
+  Server.Get("/js/signup.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/signup.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    res->Send(compressed);
+  });
+
   Server.Get("/api/user/exists", CheckUserExist);
   Server.Get("/api/user/pfp", GetUserPFP);
   Server.Post("/api/user/login", UserLogin);
-  Server.Get("/api/user/login", UserLogin);
+  Server.Post("/api/user/create", UserCreate);
 
   // Search Page
   Server.Get("/search", [](Request* req, Response* res) {
