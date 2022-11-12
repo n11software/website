@@ -12,7 +12,8 @@
 
 void search(Request* req, Response* res) {
   if (req->GetQuery("q") == "") {
-    res->SetHeader("Location", "/");
+    if (req->GetQuery("u") != "") res->SetHeader("Location", "/u/"+req->GetQuery("u"));
+    else res->SetHeader("Location", "/");
     res->SetStatus("302 Found");
     res->Send("");
   } else {
