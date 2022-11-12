@@ -43,3 +43,16 @@ std::string replace(std::string data, std::string delimiter, std::string replace
   }
   return data;
 }
+
+std::string getCookie(std::string data, std::string name) {
+  std::vector<std::string> cookies = split(data, "; ");
+  std::string c = "";
+  for (std::string cookie: cookies) {
+    if (cookie[cookie.length()-1] == '\r') cookie = cookie.substr(0, cookie.length()-1);
+    if (cookie.substr(0,name.length()+1) == name+"=") {
+      c = cookie.substr(name.length()+1);
+      break;
+    }
+  }
+  return c;
+}

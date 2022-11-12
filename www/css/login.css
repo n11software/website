@@ -9,6 +9,18 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
+.login {
+  color: #ffffff;
+  background-color: #000000;
+  padding: 0.5rem 2rem;
+  border-radius: 5px;
+  text-decoration: none;
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  top: 1rem;
+  right: 1rem;
+}
+
 .center {
   background-color: white;
   box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.1);

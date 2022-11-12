@@ -9,7 +9,7 @@
 }
 
 body {
-  background-color: [background];
+  background-color: #f8f8f8;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -18,16 +18,42 @@ body {
   align-items: center;
 }
 
+.profile {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.profile img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
+  cursor: pointer;
+}
+
+.login {
+  color: #ffffff;
+  background-color: #000000;
+  padding: 0.5rem 2rem;
+  border-radius: 5px;
+  text-decoration: none;
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  top: 1rem;
+  right: 1rem;
+}
+
 .language {
   position: absolute;
   top: 5px;
   left: 5px;
   font-family: 'JetBrains Mono', monospace;
-  color: [text];
+  color: #1c1917;
 }
 
 .language select {
-  color: [text];
+  color: #1c1917;
   border: none;
   border-radius: 5px;
   padding: 5px;
@@ -41,13 +67,13 @@ body {
 .container {
   position: relative;
   border: none;
-  background-color: [content];
+  background-color: #ffffff;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
   transition: box-shadow 0.2s ease-in-out;
   z-index: 10;
 }
@@ -61,12 +87,12 @@ body {
   font-family: 'JetBrains Mono', monospace;
   border: none;
   font-size: large;
-  color: [text];
+  color: #1c1917;
   outline: 0;
 }
 
 .container > input[type="text"]::placeholder {
-  color: [placeholder]
+  color: #a9a9a9;
 }
 
 .container > .suggestions {
@@ -76,7 +102,7 @@ body {
   width: 100%;
   border: none;
   font-size: large;
-  color: [subtext];
+  color: #5e5e5e;
   outline: 0;
 }
 
@@ -86,7 +112,7 @@ body {
 }
 
 .suggestion>span>span {
-  color: [text];
+  color: #1c1917;
 }
 
 @media (max-width: 768px) {

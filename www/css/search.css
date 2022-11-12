@@ -5,13 +5,13 @@
 }
 
 body {
-    background-color: [background];
+    background-color: #f8f8f8;
     margin: 0;
 }
 
 .info {
     margin-left: 6rem;
-    color: [subbtntxt];
+    color: #5e5e5e;
 }
 
 .results {
@@ -20,7 +20,7 @@ body {
     gap: 2rem;
     margin-left: 6rem;
     margin-top: 2rem;
-    color: [subbtntxt];
+    color: #5e5e5e;
 }
 
 .result {
@@ -38,19 +38,19 @@ body {
 
 .result .url {
     font-size: 14px;
-    color: [subbtntxt];
+    color: #5e5e5e;
     text-decoration: none;
     max-width: fit-content;
     font-style: normal;
 }
 
 .result .url  .path {
-    color: invert([btntxt]);
+    color: invert(#ffffff);
 }
 
 .result .title {
     font-size: 20px;
-    color: [btn];
+    color: #000000;
     font-weight: 500;
     text-decoration: none;
     max-width: 600px;
@@ -61,7 +61,7 @@ body {
 
 .result .description {
     font-size: 14px;
-    color: [subtext];
+    color: #5e5e5e;
     max-width: 600px;
     text-decoration: none;
 }
@@ -73,10 +73,8 @@ body {
 .navbar {
     display: flex;
     padding: 1rem 6rem;
-    background: [background];
-    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
-    border-bottom: 1px solid [content];
-    /* [shadow] border-bottom: none; */
+    background: #f8f8f8;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
     margin-bottom: 1rem;
     justify-content: space-between;
     align-items: center;
@@ -85,13 +83,13 @@ body {
 .container {
     position: relative;
     border: none;
-    background-color: [content];
+    background-color: #ffffff;
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
     transition: box-shadow 0.2s ease-in-out;
     z-index: 10;
 }
@@ -105,12 +103,12 @@ body {
     font-family: 'JetBrains Mono', monospace;
     border: none;
     font-size: large;
-    color: [text];
+    color: #1c1917;
     outline: 0;
 }
   
 .container > input[type="text"]::placeholder {
-    color: [placeholder]
+    color: #a9a9a9
 }
   
 .container > .suggestions {
@@ -120,12 +118,12 @@ body {
     min-width: 100%;
     border: none;
     font-size: large;
-    color: [subtext];
-    background-color: [content];
+    color: #5e5e5e;
+    background-color: #ffffff;
     outline: 0;
     position: absolute;
     top: 100%;
-    /* [shadow] box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025); */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
 }
   
 .suggestion {
@@ -134,14 +132,14 @@ body {
 }
   
 .suggestion>span>span {
-    color: [text];
+    color: #1c1917;
 }
 
 .pages {
     display: flex;
     gap: 1rem;
     margin: 2rem 6rem;
-    color: [text];
+    color: #1c1917;
     max-width: 600px;
     justify-content: center;
 }
@@ -149,11 +147,11 @@ body {
 .page {
     cursor: pointer;
     text-decoration: none;
-    color: [subtext];
+    color: #5e5e5e;
 }
 
 span.page {
-    color: [text];
+    color: #1c1917;
 }
 
 .page:hover {

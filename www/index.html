@@ -5,14 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Fast and secure software. Search the internet, for help, images, videos, everything!">
-    <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="/css/index.css">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="[background]">
+    <meta name="theme-color" content="#f8f8f8">
   </head>
   <body>
     <div class="language">
@@ -29,14 +28,12 @@
         <option value="zh">中文</option>
       </select>
     </div>
+    [userinfo]
     <div class="container">
       <input type="text" placeholder="Search anything..." autofocus autocapitalize="false" autocomplete="false" spellcheck="false">
       <div class="suggestions">
         
       </div>
-    </div>
-    <div class="edit-container">
-      
     </div>
     <script>
     let searchPage = false
@@ -50,15 +47,15 @@
         document.cookie = "nowarning=true; expires=Fri, 31 Dec 9999 23:59:59 GMT"
         bar.style.display = "none"
       }
-      btn.style.backgroundColor = "[background]"
-      btn.style.color = "[text]"
+      btn.style.backgroundColor = "#f8f8f8"
+      btn.style.color = "#f8f8f8"
       btn.style.padding = "5px 10px"
       btn.style.borderRadius = "5px"
       btn.style.cursor = "pointer"
       btn.style.marginRight = "3rem"
       bar.style.justifyContent = "space-between"
 
-      text.style.color = "[text]"
+      text.style.color = "#f8f8f8"
       text.style.marginLeft = "3rem"
       bar.style.position = "fixed"
       bar.style.top = "0"
@@ -67,7 +64,7 @@
       bar.style.height = "3rem"
       bar.style.display = "flex"
       bar.style.alignItems = "center"
-      bar.style.backgroundColor = "[content]"
+      bar.style.backgroundColor = "#f8f8f8"
       bar.style.zIndex = "100"
       bar.style.fontFamily = "'JetBrains Mono', monospace"
       bar.append(text)
@@ -82,8 +79,9 @@
     document.querySelector('select').onchange = () => {
       document.cookie = "lang=" + document.querySelector('select').value + "; expires=Fri, 31 Dec 9999 23:59:59 GMT"
     }
+
+    let user = [user]
     </script>
-    <script src="js/theme.js"></script>
-    <script src="js/searchbar.js"></script>
+    <script src="/js/searchbar.js"></script>
   </body>
 </html>

@@ -1,6 +1,5 @@
 #include <search.hpp>
 #include <db.hpp>
-#include <theme.hpp>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -87,7 +86,6 @@ std::string getResults(std::string query, int page, std::string cookies, std::st
   data = "";
   std::ifstream file("www/search.html");
   std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  str = theme(str, cookies);
   str = replace(str, "[query]", query);
   try {
     std::string _q = query;

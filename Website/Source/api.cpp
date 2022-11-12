@@ -26,7 +26,9 @@ void CheckUserExist(Request* req, Response* res) {
 void GetUserPFP(Request* req, Response* res) {
   res->SetHeader("Content-Type", "image/png");
   sql::Statement* stmt = getConnection()->createStatement();
-  sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM accounts WHERE email = '" + req->GetQuery("email") + "'");
+  sql::ResultSet* rs;
+  if (req->GetQuery("email")!="") rs = stmt->executeQuery("SELECT * FROM accounts WHERE email = '" + req->GetQuery("email") + "'");
+  if (req->GetQuery("uuid")!="") rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + req->GetQuery("uuid") + "'");
   if (rs->next()) {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("pfp/" + rs->getString("uuid") + ".png");
@@ -218,7 +220,7 @@ void UserLogin(Request* req, Response* res) {
     } else {
       // Login
       int user = CreateSession(req, res, rs->getString("uuid"));
-      res->Send(compress("{\"redir\": \"/?u=" + std::to_string(user) + "\"}"));
+      res->Send(compress("{\"redir\": \"/u/" + std::to_string(user) + "\"}"));
     }
   } else {
     res->SetStatus("401 Unauthorized");
@@ -263,4 +265,17 @@ void UserCreate(Request* req, Response* res) {
       res->Send(compress("sending"));
     }
   }
+}
+
+std::string GetUserID(std::string SID, std::string user) {
+  sql::Statement* stmt = getConnection()->createStatement();
+  sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + SID + "'");
+  if (rs->next()) {
+    std::vector<std::string> tokens = split(rs->getString("tokens"), ";");
+    if (tokens.size() <= atoi(user.c_str())) return "";
+    std::string token = tokens[atoi(user.c_str())];
+    rs = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
+    if (rs->next()) return rs->getString("uuid");
+  }
+  return "";
 }

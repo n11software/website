@@ -114,7 +114,7 @@ let PasswordNext = () => {
                 }
             } else if (Response.user!=undefined) {
                 SessionUserID = Response.user
-                window.location.href = "/?u="+Response.user
+                window.location.href = "/u/"+Response.user
             }
         }
     }

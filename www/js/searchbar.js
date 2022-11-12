@@ -1,4 +1,4 @@
-let shadowsEnabled = {shadows}
+let shadowsEnabled = true
 let suggestionIndex = 0
 
 let clearAllBoldedSuggestions = () => {
@@ -45,6 +45,15 @@ window.onclick = e => {
     document.querySelector('.container>.suggestions').style.display = "none"
   }
 }
+let urlParams;
+(window.onpopstate = function () {
+  var match, pl = /\+/g, search = /([^&=]+)=?([^&]*)/g, decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); }, query = window.location.search.substring(1)
+  urlParams = {}
+  while (match = search.exec(query)) urlParams[decode(match[1])] = decode(match[2])
+})()
+let userHref
+if (user != undefined || user != null) userHref = user!=-1?"&u="+user:""
+else userHref = urlParams.u!=undefined?"&u="+urlParams.u:""
 
 document.querySelector('.container>input[type="text"]').onkeyup = key => {
   if (key.keyCode === 40) {
@@ -61,7 +70,7 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
   }
   let query = document.querySelector('.container>input[type="text"]').value
   if (key.keyCode === 13) {
-    window.location.href = `/search?q=${encodeURIComponent(query)}`
+    window.location.href = `/search?q=${encodeURIComponent(query)}${userHref}`
   }
   if (query == prevVal) return
   // Get suggestions
@@ -92,7 +101,7 @@ document.querySelector('.container>input[type="text"]').onkeyup = key => {
         suggestions.forEach(suggestion => {
           let display = suggestion.replace(query, "<span>" + query + "</span>").substring(0,42)
           if (display.length==42) display = display + "..."
-          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" href="${suggestion}" onclick="window.location.href='/search?q=${encodeURIComponent(suggestion)}'"><span class="query">${display}</span></div>`
+          document.querySelector('.container>.suggestions').innerHTML += `<div class="suggestion" href="${suggestion}" onclick="window.location.href='/search?q=${encodeURIComponent(suggestion)}${userHref}'"><span class="query">${display}</span></div>`
         })
       })
     })

@@ -6,10 +6,46 @@
 #include <zstr.hpp>
 #include <chrono>
 #include <utils.hpp>
-#include <theme.hpp>
 #include <db.hpp>
 #include <search.hpp>
 #include <api.hpp>
+
+void search(Request* req, Response* res) {
+  if (req->GetQuery("q") == "") {
+    res->SetHeader("Location", "/");
+    res->SetStatus("302 Found");
+    res->Send("");
+  } else {
+    res->SetHeader("Content-Type", "text/html; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    if (req->GetQuery("suggestions")=="true") {
+      res->Send(getSuggestions(req->GetQuery("q")));
+    } else {
+      int page = 0;
+      if (req->GetQuery("page") != "") {
+        page = std::stoi(req->GetQuery("page"))-1;
+      }
+      std::string lang = "en";
+      if (req->GetHeader("cookie").find("lang=") != std::string::npos) {
+        lang = req->GetHeader("cookie").substr(req->GetHeader("cookie").find("lang=")+5, 2);
+      }
+      std::string data = getResults(req->GetQuery("q"), page, req->GetHeader("cookie"), lang);
+      std::string compressed = compress(data);
+      res->Send(compressed);
+    }
+  }
+}
+
+void redir(Response* res, std::string url) {
+  res->SetHeader("Location", url);
+  res->SetStatus("302 Found");
+  res->Send("");
+}
+
+bool isINT(const std::string& s) {
+  return !s.empty() && std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
 
 int main() {
   connect();
@@ -28,11 +64,31 @@ int main() {
 
   // Return Index Page
   Server.Get("/", [](Request* req, Response* res) {
+    std::string uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), "0");
+    if (uuid != "") redir(res, "/u/0");
     res->SetHeader("Content-Type", "text/html; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/index.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    str = replace(str, "[userinfo]", "<a href=\"/login\" class=\"login\">Login</a>");
+    str = replace(str, "[user]", "-1");
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
+  // Return index with user
+  Server.Get("/u/{user}", [](Request* req, Response* res) {
+    if (!isINT(req->GetQuery("user"))) redir(res, "/");
+    std::string uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), req->GetQuery("user"));
+    if (uuid == "") redir(res, "/");
+    res->SetHeader("Content-Type", "text/html; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/index.html");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string userinfo = "<div class=\"profile\"><a href=\"/u/"+req->GetQuery("user")+"/account\"><img src=\"/api/user/pfp?uuid="+uuid+"\"></a></div>";
+    str = replace(str, "[userinfo]", userinfo);
+    str = replace(str, "[user]", req->GetQuery("user"));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -62,16 +118,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/css/index.css");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
-    res->Send(compressed);
-  });
-
-  Server.Get("/css/theme.css", [](Request* req, Response* res) {
-    res->SetHeader("Content-Type", "text/css; charset=utf-8");
-    res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/css/theme.css");
-    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -81,17 +128,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/css/search.css");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
-    res->Send(compressed);
-  });
-
-  // Return stylesheet for profile
-  Server.Get("/css/profile.css", [](Request* req, Response* res) {
-    res->SetHeader("Content-Type", "text/css; charset=utf-8");
-    res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/css/profile.css");
-    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -101,27 +138,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/js/searchbar.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
-    res->Send(compressed);
-  });
-
-  // Return javascript for profile
-  Server.Get("/js/profile.js", [](Request* req, Response* res) {
-    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
-    res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/js/profile.js");
-    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
-    res->Send(compressed);
-  });
-
-  // Return javascript for theming
-  Server.Get("/js/theme.js", [](Request* req, Response* res) {
-    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
-    res->SetHeader("Content-Encoding", "gzip");
-    std::ifstream file("www/js/theme.js");
-    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -146,7 +163,7 @@ int main() {
       str = replace(str, "[nothidden]", "hidden");
       str = replace(str, "[hidden]", "");
       res->SetHeader("Content-Encoding", "gzip");
-      std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+      std::string compressed = compress(str);
       res->Send(compressed);
       return;
     }
@@ -189,7 +206,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/js/login.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -199,7 +216,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/css/login.css");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -209,7 +226,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/signup.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -219,7 +236,7 @@ int main() {
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/js/signup.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string compressed = compress(theme(str, req->GetHeader("cookie")));
+    std::string compressed = compress(str);
     res->Send(compressed);
   });
 
@@ -229,31 +246,7 @@ int main() {
   Server.Post("/api/user/create", UserCreate);
 
   // Search Page
-  Server.Get("/search", [](Request* req, Response* res) {
-    if (req->GetQuery("q") == "") {
-      res->SetHeader("Location", "/");
-      res->SetStatus("302 Found");
-      res->Send("");
-    } else {
-      res->SetHeader("Content-Type", "text/html; charset=utf-8");
-      res->SetHeader("Content-Encoding", "gzip");
-      if (req->GetQuery("suggestions")=="true") {
-        res->Send(getSuggestions(req->GetQuery("q")));
-      } else {
-        int page = 0;
-        if (req->GetQuery("page") != "") {
-          page = std::stoi(req->GetQuery("page"))-1;
-        }
-        std::string lang = "en";
-        if (req->GetHeader("cookie").find("lang=") != std::string::npos) {
-          lang = req->GetHeader("cookie").substr(req->GetHeader("cookie").find("lang=")+5, 2);
-        }
-        std::string data = getResults(req->GetQuery("q"), page, req->GetHeader("cookie"), lang);
-        std::string compressed = compress(data);
-        res->Send(compressed);
-      }
-    }
-  });
+  Server.Get("/search", search);
 
   // Fonts
   Server.Get("/fonts/jbm.css", [](Request* req, Response* res) {
