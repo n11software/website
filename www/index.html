@@ -37,40 +37,6 @@
     </div>
     <script>
     let searchPage = false
-    if (!document.cookie.includes('nowarning')) {
-      let bar = document.createElement('div')
-      let text = document.createElement('span')
-      text.innerText = "This site is currently in beta."
-      let btn = document.createElement('a')
-      btn.innerText = "Dismiss"
-      btn.onclick = () => {
-        document.cookie = "nowarning=true; expires=Fri, 31 Dec 9999 23:59:59 GMT"
-        bar.style.display = "none"
-      }
-      btn.style.backgroundColor = "#f8f8f8"
-      btn.style.color = "#f8f8f8"
-      btn.style.padding = "5px 10px"
-      btn.style.borderRadius = "5px"
-      btn.style.cursor = "pointer"
-      btn.style.marginRight = "3rem"
-      bar.style.justifyContent = "space-between"
-
-      text.style.color = "#f8f8f8"
-      text.style.marginLeft = "3rem"
-      bar.style.position = "fixed"
-      bar.style.top = "0"
-      bar.style.left = "0"
-      bar.style.width = "100vw"
-      bar.style.height = "3rem"
-      bar.style.display = "flex"
-      bar.style.alignItems = "center"
-      bar.style.backgroundColor = "#f8f8f8"
-      bar.style.zIndex = "100"
-      bar.style.fontFamily = "'JetBrains Mono', monospace"
-      bar.append(text)
-      bar.appendChild(btn)
-      document.body.prepend(bar)
-    }
     
     let lang = document.cookie.split('; ')
     lang = lang.find(row => row.startsWith('lang='))
