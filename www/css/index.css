@@ -18,20 +18,6 @@ body {
   align-items: center;
 }
 
-.profile {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-}
-
-.profile img {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.025);
-  cursor: pointer;
-}
-
 .login {
   color: #ffffff;
   background-color: #000000;

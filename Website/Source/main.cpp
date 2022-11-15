@@ -77,16 +77,45 @@ int main() {
     res->Send(compressed);
   });
 
+  // Accounts page
+  Server.Get("/u/{user}/account", [](Request* req, Response* res) {
+    res->Send("Account page");
+  });
+
   // Return index with user
   Server.Get("/u/{user}", [](Request* req, Response* res) {
     if (!isINT(req->GetQuery("user"))) redir(res, "/");
     std::string uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), req->GetQuery("user"));
     if (uuid == "") redir(res, "/");
+    UserInfo u(uuid);
     res->SetHeader("Content-Type", "text/html; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/index.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string userinfo = "<div class=\"profile\"><a href=\"/u/"+req->GetQuery("user")+"/account\"><img src=\"/api/user/pfp?uuid="+uuid+"\"></a></div>";
+    std::string userinfo = "<div class=\"profile\">\
+                              <img src=\"/api/user/pfp?uuid="+uuid+"\">\
+                              <div class=\"menu\">\
+                                <div class=\"current\">\
+                                  <img src=\"/api/user/pfp?uuid="+uuid+"\">\
+                                  <span class=\"name\">"+u.GetFirstName()+" "+u.GetLastName()+"</span>\
+                                  <span class=\"email\">"+u.GetEmail()+"</span>\
+                                </div>\
+                                <div class=\"buttons\">\
+                                  <a class=\"button-secondary\" href=\"/u/"+req->GetQuery("user")+"/account\">Account</a>\
+                                </div>";
+    // Get all uuids in session
+    std::vector<std::string> uuids = GetSessionUUIDs(getCookie(req->GetHeader("cookie"), "session"));
+    for (int i=0;i<uuids.size();i++) {
+      UserInfo user(uuids[i]);
+      userinfo += "<a href=\"/u/"+std::to_string(i)+"\">\
+        <img src=\"/api/user/pfp?uuid="+uuids[i]+"\">\
+        <div class=\"info\">\
+          <span class=\"name\">"+user.GetFirstName() + " " + user.GetLastName()+"</span>\
+          <span class=\"email\">"+user.GetEmail()+"</span>\
+        </div>\
+      </a>";
+    }
+    userinfo += "<div class=\"buttons col\"><a class=\"button-secondary\" href=\"/login?skipselect=true\">Add another account</a><a class=\"button\">Edit</a></div></div></div>";
     str = replace(str, "[userinfo]", userinfo);
     str = replace(str, "[user]", req->GetQuery("user"));
     std::string compressed = compress(str);
@@ -118,6 +147,14 @@ int main() {
     res->SetHeader("Content-Type", "text/css; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/css/index.css");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+  Server.Get("/css/profile.css", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/css; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/css/profile.css");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(str);
     res->Send(compressed);
@@ -160,7 +197,7 @@ int main() {
       }
     }
     sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + session + "'");
-    if (!rs->next()) {
+    if (!rs->next() || req->GetQuery("skipselect") == "true") {
       str = replace(str, "[nothidden]", "hidden");
       str = replace(str, "[hidden]", "");
       res->SetHeader("Content-Encoding", "gzip");
@@ -174,14 +211,14 @@ int main() {
     for (std::string token: split(rs->getString("tokens"), ";")) {
       rs = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
       if (!rs->next()) {
-        // if token is invalid force relogin
+        // TODO: if token is invalid force relogin
         res->Error(403);
         res->Send(compress("You have been logged out!"));
         return;
       }
       rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + rs->getString("uuid") + "'");
       if (!rs->next()) {
-        // if account is invalid force relogin
+        // TODO: if account is invalid force relogin
         res->Error(403);
         res->Send(compress("One of the accounts was deleted!"));
         return;
@@ -231,11 +268,21 @@ int main() {
     res->Send(compressed);
   });
 
-  // Return javascript for login
+  // Return javascript for signup
   Server.Get("/js/signup.js", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/js/signup.js");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
+  // Return javascript for profile
+  Server.Get("/js/profile.js", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/javascript; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/js/profile.js");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(str);
     res->Send(compressed);

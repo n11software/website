@@ -156,7 +156,7 @@ int CreateSession(Request* req, Response* res, std::string uuid) {
     sql::ResultSet* rs2 = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + session + "'");
     if (rs2->next()) {
       stmt->execute("UPDATE sessions SET tokens = '"+rs2->getString("tokens")+";"+token+"' WHERE id = '" + session + "'");
-      i = split(rs2->getString("tokens"), ";").size()-1;
+      i = split(rs2->getString("tokens"), ";").size();
     } else {
       session = generateUUID(32, req->GetSocket());
       stmt->execute("INSERT INTO sessions (id, tokens) VALUES ('" + session + "', '" + token + "')");
@@ -278,4 +278,56 @@ std::string GetUserID(std::string SID, std::string user) {
     if (rs->next()) return rs->getString("uuid");
   }
   return "";
+}
+
+std::vector<std::string> GetSessionUUIDs(std::string sessionID) {
+  sql::Statement* stmt = getConnection()->createStatement();
+  sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + sessionID + "'");
+  if (rs->next()) {
+    std::vector<std::string> tokens = split(rs->getString("tokens"), ";");
+    std::vector<std::string> uuids;
+    for (std::string token: tokens) {
+      rs = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
+      if (rs->next()) uuids.push_back(rs->getString("uuid"));
+    }
+    return uuids;
+  }
+  return {};
+}
+
+UserInfo::UserInfo(std::string uuid) {
+  sql::Statement* stmt = getConnection()->createStatement();
+  sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM accounts WHERE uuid = '" + uuid + "'");
+  if (rs->next()) {
+    this->uuid = uuid;
+    this->email = rs->getString("email");
+    this->firstname = rs->getString("firstname");
+    this->lastname = rs->getString("lastname");
+    this->password = rs->getString("password");
+    this->phonenumbers = split(rs->getString("phonenumbers"), ";");
+  }
+}
+
+std::string UserInfo::GetUUID() {
+  return this->uuid;
+}
+
+std::string UserInfo::GetEmail() {
+  return this->email;
+}
+
+std::string UserInfo::GetPassword() {
+  return this->password;
+}
+
+std::string UserInfo::GetFirstName() {
+  return this->firstname;
+}
+
+std::string UserInfo::GetLastName() {
+  return this->lastname;
+}
+
+std::vector<std::string> UserInfo::GetPhoneNumbers() {
+  return this->phonenumbers;
 }
