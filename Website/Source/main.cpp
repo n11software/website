@@ -106,6 +106,7 @@ int main() {
     // Get all uuids in session
     std::vector<std::string> uuids = GetSessionUUIDs(getCookie(req->GetHeader("cookie"), "session"));
     for (int i=0;i<uuids.size();i++) {
+      if (uuid == uuids[i]) continue;
       UserInfo user(uuids[i]);
       userinfo += "<a href=\"/u/"+std::to_string(i)+"\">\
         <img src=\"/api/user/pfp?uuid="+uuids[i]+"\">\

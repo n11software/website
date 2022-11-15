@@ -41,7 +41,7 @@ let EmailBack = () => {
 
 let EmailNext = () => {
   let CheckEmail = new XMLHttpRequest()
-  CheckEmail.open("GET", "/api/user/exists?email="+Email, true)
+  CheckEmail.open("GET", "/api/user/exists?email="+Email+"&checkIfAlreadyLoggedIn=true", true)
   CheckEmail.send()
   CheckEmail.onreadystatechange = () => {
     if (CheckEmail.readyState == 4 && document.querySelector("#email>.input>input").value == Email && CheckEmail.responseText == "{\"exists\":true}") {
@@ -51,10 +51,18 @@ let EmailNext = () => {
       document.querySelector(".input>svg.error").classList.add("hidden")
       document.querySelector(".input>svg.success").classList.remove("hidden")
       document.querySelector("#password>.input>input").focus()
-    } else {
+    } else if (CheckEmail.readyState == 4) {
       document.querySelector(".input>svg.error").classList.remove("hidden")
       document.querySelector(".input>svg.success").classList.add("hidden")
       document.querySelector("#email>.buttons>a.button").setAttribute("disabled", "")
+      let json = JSON.parse(CheckEmail.responseText)
+      if (json.error != undefined) {
+        document.querySelector("#email>.error").style.display = "block"
+        document.querySelector("#email>.error").innerText = json.error
+      } else {
+        document.querySelector("#email>.error").style.display = "block"
+        document.querySelector("#email>.error").innerText = "This email does not exist."
+      }
     }
   }
 }

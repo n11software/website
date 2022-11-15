@@ -120,3 +120,8 @@ a {
     top: 1rem;
     right: 1rem;
 }
+
+.current>img {
+    cursor: default;
+    pointer-events: none;
+}

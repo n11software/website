@@ -15,6 +15,25 @@ void CheckUserExist(Request* req, Response* res) {
     res->SetHeader("Content-Type", "application/json; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     sql::Statement* stmt = getConnection()->createStatement();
+    if (req->GetQuery("checkIfAlreadyLoggedIn") == "true") {
+      std::string s = getCookie(req->GetHeader("cookie"), "session");
+      if (s != "") {
+        sql::ResultSet* rs2 = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + s + "'");
+        if (rs2->next()) {
+          std::vector<std::string> tokens = split(rs2->getString("tokens"), ";");
+          for (std::string token: tokens) {
+            sql::ResultSet* rs3 = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
+            if (rs3->next()) {
+              UserInfo u(rs3->getString("uuid"));
+              if (u.GetEmail() == req->GetQuery("email")) {
+                res->Send(compress("{\"error\":\"You are already logged in!\"}"));
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
     sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM accounts WHERE email = '" + req->GetQuery("email") + "'");
     if (rs->next()) {
       res->Send(compress("{\"exists\":true}"));
@@ -174,7 +193,24 @@ void UserLogin(Request* req, Response* res) {
   res->SetHeader("Content-Encoding", "gzip");
   sql::Statement* stmt = getConnection()->createStatement();
   sql::ResultSet* rs = stmt->executeQuery("SELECT * FROM accounts WHERE email = '" + req->GetFormParam("email") + "' AND password = '" + SHA512::hash(req->GetFormParam("password")) + "'");
-  if (rs->next()) {
+  std::string s = getCookie(req->GetHeader("cookie"), "session");
+  if (s != "") {
+    sql::ResultSet* rs2 = stmt->executeQuery("SELECT * FROM sessions WHERE id = '" + s + "'");
+    if (rs2->next()) {
+      std::vector<std::string> tokens = split(rs2->getString("tokens"), ";");
+      for (std::string token: tokens) {
+        sql::ResultSet* rs3 = stmt->executeQuery("SELECT * FROM tokens WHERE id = '" + token + "'");
+        if (rs3->next()) {
+          UserInfo u(rs3->getString("uuid"));
+          if (u.GetEmail() == req->GetFormParam("email")) {
+            res->SetStatus("401 Unauthorized");
+            res->Send(compress("{\"error\":\"You are already logged in!\"}"));
+            return;
+          }
+        }
+      }
+    }
+  } else if (rs->next()) {
     if (rs->getBoolean("2fa")==1) {
       if (req->GetFormParam("requestCode") != "") {
         // Send email or sms

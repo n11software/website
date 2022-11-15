@@ -14,3 +14,7 @@ let toggle = () => {
 }
 
 document.querySelector('.profile>img').onclick = () => toggle()
+
+document.addEventListener('click', (e) => {
+    if (val&&e.target.closest('.profile') == null) toggle()
+})
