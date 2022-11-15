@@ -90,6 +90,7 @@ int main() {
     UserInfo u(uuid);
     res->SetHeader("Content-Type", "text/html; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
+    std::vector<std::string> uuids = GetSessionUUIDs(getCookie(req->GetHeader("cookie"), "session"));
     std::ifstream file("www/index.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string userinfo = "<div class=\"profile\">\
@@ -103,8 +104,6 @@ int main() {
                                 <div class=\"buttons\">\
                                   <a class=\"button-secondary\" href=\"/u/"+req->GetQuery("user")+"/account\">Account</a>\
                                 </div>";
-    // Get all uuids in session
-    std::vector<std::string> uuids = GetSessionUUIDs(getCookie(req->GetHeader("cookie"), "session"));
     for (int i=0;i<uuids.size();i++) {
       if (uuid == uuids[i]) continue;
       UserInfo user(uuids[i]);
@@ -116,7 +115,9 @@ int main() {
         </div>\
       </a>";
     }
-    userinfo += "<div class=\"buttons col\"><a class=\"button-secondary\" href=\"/login?skipselect=true\">Add another account</a><a class=\"button\">Edit</a></div></div></div>";
+    userinfo += "<div class=\"buttons col\"><a class=\"button-secondary\" href=\"/login?skipselect=true\">Add another account</a><a class=\"button\">";
+    userinfo += (uuids.size()>1?"Edit":"Sign out");
+    userinfo += "</a></div></div></div>";
     str = replace(str, "[userinfo]", userinfo);
     str = replace(str, "[user]", req->GetQuery("user"));
     std::string compressed = compress(str);
