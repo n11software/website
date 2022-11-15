@@ -210,7 +210,8 @@ void UserLogin(Request* req, Response* res) {
         }
       }
     }
-  } else if (rs->next()) {
+  }
+  if (rs->next()) {
     if (rs->getBoolean("2fa")==1) {
       if (req->GetFormParam("requestCode") != "") {
         // Send email or sms
