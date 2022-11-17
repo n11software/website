@@ -30,7 +30,7 @@ void search(Request* req, Response* res) {
       if (req->GetHeader("cookie").find("lang=") != std::string::npos) {
         lang = req->GetHeader("cookie").substr(req->GetHeader("cookie").find("lang=")+5, 2);
       }
-      std::string data = getResults(req->GetQuery("q"), page, req->GetHeader("cookie"), lang);
+      std::string data = getResults(req->GetQuery("q"), page, req->GetHeader("cookie"), lang, req, res);
       std::string compressed = compress(data);
       res->Send(compressed);
     }
@@ -42,11 +42,6 @@ void redir(Response* res, std::string url) {
   res->SetStatus("302 Found");
   res->Send("");
 }
-
-bool isINT(const std::string& s) {
-  return !s.empty() && std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
-}
-
 
 int main() {
   connect();
@@ -87,39 +82,38 @@ int main() {
     if (!isINT(req->GetQuery("user"))) redir(res, "/");
     std::string uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), req->GetQuery("user"));
     if (uuid == "") redir(res, "/");
-    UserInfo u(uuid);
     res->SetHeader("Content-Type", "text/html; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
-    std::vector<std::string> uuids = GetSessionUUIDs(getCookie(req->GetHeader("cookie"), "session"));
+    UserInfo u(uuid);
     std::ifstream file("www/index.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::string userinfo = "<div class=\"profile\">\
-                              <img src=\"/api/user/pfp?uuid="+uuid+"\">\
-                              <div class=\"menu\">\
-                                <div class=\"current\">\
-                                  <img src=\"/api/user/pfp?uuid="+uuid+"\">\
-                                  <span class=\"name\">"+u.GetFirstName()+" "+u.GetLastName()+"</span>\
-                                  <span class=\"email\">"+u.GetEmail()+"</span>\
-                                </div>\
-                                <div class=\"buttons\">\
-                                  <a class=\"button-secondary\" href=\"/u/"+req->GetQuery("user")+"/account\">Account</a>\
-                                </div>";
-    for (int i=0;i<uuids.size();i++) {
-      if (uuid == uuids[i]) continue;
-      UserInfo user(uuids[i]);
-      userinfo += "<a href=\"/u/"+std::to_string(i)+"\">\
-        <img src=\"/api/user/pfp?uuid="+uuids[i]+"\">\
-        <div class=\"info\">\
-          <span class=\"name\">"+user.GetFirstName() + " " + user.GetLastName()+"</span>\
-          <span class=\"email\">"+user.GetEmail()+"</span>\
-        </div>\
-      </a>";
-    }
-    userinfo += "<div class=\"buttons col\"><a class=\"button-secondary\" href=\"/login?skipselect=true\">Add another account</a><a class=\"button\">";
-    userinfo += (uuids.size()>1?"Edit":"Sign out");
-    userinfo += "</a></div></div></div>";
-    str = replace(str, "[userinfo]", userinfo);
+    str = AddUserInfo(str, uuid, req->GetQuery("user"), req->GetHeader("cookie"), "/u/{user}");
     str = replace(str, "[user]", req->GetQuery("user"));
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
+  // Account
+  Server.Get("/u/{user}/account", [](Request* req, Response* res) {
+    if (!isINT(req->GetQuery("user"))) redir(res, "/");
+    std::string uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), req->GetQuery("user"));
+    if (uuid == "") redir(res, "/");
+    res->SetHeader("Content-Type", "text/html; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    UserInfo u(uuid);
+    std::ifstream file("www/account.html");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    str = AddUserInfo(str, uuid, req->GetQuery("user"), req->GetHeader("cookie"), "/u/{user}/account");
+    str = replace(str, "[user]", req->GetQuery("user"));
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
+  Server.Get("/css/account.css", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "text/css; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/css/account.css");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(str);
     res->Send(compressed);
   });

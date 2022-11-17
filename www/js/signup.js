@@ -29,6 +29,7 @@ document.getElementById("email").onkeyup = () => {
 }
 
 let EmailNext = () => {
+  if (document.querySelector("#email>.buttons>a.button").hasAttribute("disabled")) return
   let CheckEmail = new XMLHttpRequest()
   CheckEmail.open("GET", "/api/user/exists?email="+Email, true)
   CheckEmail.send()

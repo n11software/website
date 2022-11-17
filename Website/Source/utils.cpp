@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 #include <zstr.hpp>
+#include <algorithm>
+#include <cctype>
+#include <string>
 
 std::string compress(std::string data) {
   std::ostringstream output;
@@ -55,4 +58,8 @@ std::string getCookie(std::string data, std::string name) {
     }
   }
   return c;
+}
+
+bool isINT(const std::string& s) {
+  return !s.empty() && std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }

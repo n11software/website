@@ -368,3 +368,35 @@ std::string UserInfo::GetLastName() {
 std::vector<std::string> UserInfo::GetPhoneNumbers() {
   return this->phonenumbers;
 }
+
+std::string AddUserInfo(std::string str, std::string uuid, std::string user, std::string cookies, std::string redir) {
+  UserInfo u(uuid);
+  std::vector<std::string> uuids = GetSessionUUIDs(getCookie(cookies, "session"));
+  std::string userinfo = "<div class=\"profile\">\
+                            <img src=\"/api/user/pfp?uuid="+uuid+"\">\
+                            <div class=\"menu\">\
+                              <div class=\"current\">\
+                                <img src=\"/api/user/pfp?uuid="+uuid+"\">\
+                                <span class=\"name\">"+u.GetFirstName()+" "+u.GetLastName()+"</span>\
+                                <span class=\"email\">"+u.GetEmail()+"</span>\
+                              </div>\
+                              <div class=\"buttons\">\
+                                <a class=\"button-secondary\" href=\"/u/"+user+"/account\">Account</a>\
+                              </div>";
+  for (int i=0;i<uuids.size();i++) {
+    if (uuid == uuids[i]) continue;
+    UserInfo user(uuids[i]);
+    userinfo += "<a href=\""+replace(redir, "{user}", std::to_string(i))+"\">\
+      <img src=\"/api/user/pfp?uuid="+uuids[i]+"\">\
+      <div class=\"info\">\
+        <span class=\"name\">"+user.GetFirstName() + " " + user.GetLastName()+"</span>\
+        <span class=\"email\">"+user.GetEmail()+"</span>\
+      </div>\
+    </a>";
+  }
+  userinfo += "<div class=\"buttons col\"><a class=\"button-secondary\" href=\"/login?skipselect=true\">Add another account</a><a class=\"button\">";
+  userinfo += (uuids.size()>1?"Edit":"Sign out");
+  userinfo += "</a></div></div></div>";
+  str = replace(str, "[userinfo]", userinfo);
+  return str;
+}

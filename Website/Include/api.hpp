@@ -22,3 +22,5 @@ class UserInfo {
     std::string uuid, email, password, firstname, lastname;
     std::vector<std::string> phonenumbers;
 };
+
+std::string AddUserInfo(std::string str, std::string uuid, std::string user, std::string cookies, std::string redir);

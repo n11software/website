@@ -9,7 +9,7 @@ body {
     margin: 0;
 }
 
-.info {
+body>.info {
     margin-left: 6rem;
     color: #5e5e5e;
 }

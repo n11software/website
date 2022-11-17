@@ -79,13 +79,40 @@ std::string getSuggestions(std::string term) {
   return compress(data);
 }
 
-std::string getResults(std::string query, int page, std::string cookies, std::string lang) {
+#include <api.hpp>
+
+std::string getResults(std::string query, int page, std::string cookies, std::string lang, Request* req, Response* res) {
+  std::string uuid;
+  std::ifstream file("www/search.html");
+  std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  if (req->GetQuery("u") != "") {
+    if (!isINT(req->GetQuery("u"))) {
+      res->SetHeader("Location", "/search?q=" + query);
+      res->SetStatus("302 Found");
+      res->Send("");
+    } else {
+      uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), req->GetQuery("u"));
+      if (uuid == "") {
+        res->SetHeader("Location", "/search?q=" + query);
+        res->SetStatus("302 Found");
+        res->Send("");
+      } else {
+        str = AddUserInfo(str, uuid, req->GetQuery("u"), req->GetHeader("cookie"), "/search?q="+ query + "&u={user}");
+      }
+    }
+  } else {
+    str = replace(str, "[userinfo]", "<a href=\"/login\" class=\"login\">Login</a>");
+    uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), "0");
+    if (uuid != "") {
+      res->SetHeader("Location", "/search?q=" + query + "&u=0");
+      res->SetStatus("302 Found");
+      res->Send("");
+    }
+  }
   std::string data = query;
   std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c){ return std::tolower(c); });
   if (query.length() <= 256) addSearchTerm(data);
   data = "";
-  std::ifstream file("www/search.html");
-  std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   str = replace(str, "[query]", query);
   try {
     std::string _q = query;
@@ -175,7 +202,7 @@ std::string getResults(std::string query, int page, std::string cookies, std::st
   } catch (sql::SQLException &e) {
     if (e.getErrorCode() == 2013) {
       connect();
-      return getResults(query, page, cookies, lang);
+      return getResults(query, page, cookies, lang, req, res);
     }
     std::cout << "Error: " << e.what() << std::endl;
   }
