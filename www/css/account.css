@@ -81,7 +81,6 @@ body {
 }
 
 .pfp {
-    margin-top: 4rem;
     width: 96px;
     height: 96px;
     border-radius: 50%;
@@ -108,6 +107,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     -webkit-appearance: none;
 }
 
+.save {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    padding: 0.25rem 2rem;
+    background-color: black;
+    color: white;
+    border-radius: 5px;
+    margin-top: 2rem;
+    margin-right: 2rem;
+    margin-bottom: 2rem;
+    align-self: flex-end;
+    cursor: pointer;
+}
+
 @media (max-width: 835px) {
     body {
         flex-direction: column;
@@ -132,6 +145,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
     .content {
         width: auto;
+    }
+
+    .save {
+        position: absolute;
+        left: 0;
+        width: calc(100% - 4rem);
+        bottom: 1rem;
+        padding: 0.5rem 0;
+        text-align: center;
+        margin: 0 2rem;
     }
 }
 

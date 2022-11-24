@@ -58,6 +58,7 @@
     <div class="content">
         <span class="title">Account Info</span>
         <div class="info">
+            <a class="save" onclick="save()">Save</a>
             <img src="/api/user/pfp?uuid={uuid}" alt="Profile Picture" class="pfp">
             <div class="name">
                 <input type="text" class="first" value="{first}" onkeypress="this.style.width = ((this.value.length + 1) * 12) + 'px';">
@@ -70,6 +71,23 @@
             </div>
         </div>
     </div>
+    <script>
+        let save = () => {
+            let first = document.querySelector(".first").value;
+            let last = document.querySelector(".last").value;
+            let email = document.querySelector(".email").value;
+            let dob = document.querySelector(".dob").value;
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/user/update");
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.send("first=" + first + "&last=" + last + "&email=" + email + "&dob=" + dob);
+            xhr.onload = () => {
+                if (xhr.status == 200) {
+                    window.location.reload();
+                }
+            }
+        }
+    </script>
     <script>
         document.querySelector('.first').style.width = ((document.querySelector('.first').value.length + 1) * 10) + 'px'
         document.querySelector('.last').style.width = ((document.querySelector('.last').value.length + 1) * 10) + 'px'
