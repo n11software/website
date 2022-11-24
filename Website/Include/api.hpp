@@ -17,9 +17,10 @@ class UserInfo {
     std::string GetPassword();
     std::string GetFirstName();
     std::string GetLastName();
+    std::string GetDOB();
     std::vector<std::string> GetPhoneNumbers();
   private:
-    std::string uuid, email, password, firstname, lastname;
+    std::string uuid, email, password, firstname, lastname, DOB;
     std::vector<std::string> phonenumbers;
 };
 

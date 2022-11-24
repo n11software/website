@@ -17,7 +17,7 @@
   <body>
     [userinfo]
     <div class="nav">
-        <a href="/u/[user]">
+        <a class="logo" href="/u/[user]">
             <svg width="50px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48.97 48.97">
                 <defs>
                     <style>
@@ -49,9 +49,31 @@
                 </g>
             </svg>
         </a>
-        <a class="link" id="info">Account Info</a>
-        <a class="link" id="security">Security</a>
+        <a class="link this" href="/u/[user]/account">Account Info</a>
+        <a class="link" href="/u/[user]/account/security">Security</a>
+        <a class="link" href="/u/[user]/account/history">History</a>
+        
         <script src="/js/profile.js"></script>
     </div>
+    <div class="content">
+        <span class="title">Account Info</span>
+        <div class="info">
+            <img src="/api/user/pfp?uuid={uuid}" alt="Profile Picture" class="pfp">
+            <div class="name">
+                <input type="text" class="first" value="{first}" onkeypress="this.style.width = ((this.value.length + 1) * 12) + 'px';">
+                <input type="text" class="last" value="{last}" onkeypress="this.style.width = ((this.value.length + 1) * 12) + 'px';">
+            </div>
+            <input type="email" class="email" value="{email}" onkeypress="this.style.width = ((this.value.length + 1) * 10) + 'px';">
+            <div class="dob-wrapper">
+                <span class="type">Date of Birth: </span>
+                <input type="date" class="dob" value="{dob}">
+            </div>
+        </div>
+    </div>
+    <script>
+        document.querySelector('.first').style.width = ((document.querySelector('.first').value.length + 1) * 10) + 'px'
+        document.querySelector('.last').style.width = ((document.querySelector('.last').value.length + 1) * 10) + 'px'
+        document.querySelector('input.email').style.width = ((document.querySelector('input.email').value.length + 1) * 10) + 'px'
+    </script>
   </body>
 </html>

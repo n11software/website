@@ -109,6 +109,21 @@ int main() {
     res->Send(compressed);
   });
 
+  Server.Get("/u/{user}/account/security", [](Request* req, Response* res) {
+    if (!isINT(req->GetQuery("user"))) redir(res, "/");
+    std::string uuid = GetUserID(getCookie(req->GetHeader("cookie"), "session"), req->GetQuery("user"));
+    if (uuid == "") redir(res, "/");
+    res->SetHeader("Content-Type", "text/html; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    UserInfo u(uuid);
+    std::ifstream file("www/security.html");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    str = AddUserInfo(str, uuid, req->GetQuery("user"), req->GetHeader("cookie"), "/u/{user}/account");
+    str = replace(str, "[user]", req->GetQuery("user"));
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
   Server.Get("/css/account.css", [](Request* req, Response* res) {
     res->SetHeader("Content-Type", "text/css; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");

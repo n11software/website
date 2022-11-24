@@ -342,6 +342,7 @@ UserInfo::UserInfo(std::string uuid) {
     this->lastname = rs->getString("lastname");
     this->password = rs->getString("password");
     this->phonenumbers = split(rs->getString("phonenumbers"), ";");
+    this->DOB = rs->getString("dob");
   }
 }
 
@@ -369,8 +370,17 @@ std::vector<std::string> UserInfo::GetPhoneNumbers() {
   return this->phonenumbers;
 }
 
+std::string UserInfo::GetDOB() {
+  return this->DOB;
+}
+
 std::string AddUserInfo(std::string str, std::string uuid, std::string user, std::string cookies, std::string redir) {
   UserInfo u(uuid);
+  str = replace(str, "{uuid}", uuid);
+  str = replace(str, "{email}", u.GetEmail());
+  str = replace(str, "{first}", u.GetFirstName());
+  str = replace(str, "{last}", u.GetLastName());
+  str = replace(str, "{dob}", u.GetDOB());
   std::vector<std::string> uuids = GetSessionUUIDs(getCookie(cookies, "session"));
   std::string userinfo = "<div class=\"profile\">\
                             <img src=\"/api/user/pfp?uuid="+uuid+"\">\
