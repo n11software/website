@@ -118,7 +118,7 @@ int main() {
     UserInfo u(uuid);
     std::ifstream file("www/security.html");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    str = AddUserInfo(str, uuid, req->GetQuery("user"), req->GetHeader("cookie"), "/u/{user}/account");
+    str = AddUserInfo(str, uuid, req->GetQuery("user"), req->GetHeader("cookie"), "/u/{user}/account/security");
     str = replace(str, "[user]", req->GetQuery("user"));
     std::string compressed = compress(str);
     res->Send(compressed);
@@ -138,6 +138,15 @@ int main() {
     res->SetHeader("Content-Type", "text/text; charset=utf-8");
     res->SetHeader("Content-Encoding", "gzip");
     std::ifstream file("www/robots.txt");
+    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string compressed = compress(str);
+    res->Send(compressed);
+  });
+
+  Server.Get("/remove.svg", [](Request* req, Response* res) {
+    res->SetHeader("Content-Type", "image/svg+xml; charset=utf-8");
+    res->SetHeader("Content-Encoding", "gzip");
+    std::ifstream file("www/remove.svg");
     std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     std::string compressed = compress(str);
     res->Send(compressed);

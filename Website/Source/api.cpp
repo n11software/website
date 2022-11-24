@@ -343,6 +343,7 @@ UserInfo::UserInfo(std::string uuid) {
     this->password = rs->getString("password");
     this->phonenumbers = split(rs->getString("phonenumbers"), ";");
     this->DOB = rs->getString("dob");
+    this->TwoFactor = rs->getBoolean("2fa");
   }
 }
 
@@ -374,6 +375,10 @@ std::string UserInfo::GetDOB() {
   return this->DOB;
 }
 
+bool UserInfo::Get2FA() {
+  return this->TwoFactor;
+}
+
 std::string AddUserInfo(std::string str, std::string uuid, std::string user, std::string cookies, std::string redir) {
   UserInfo u(uuid);
   str = replace(str, "{uuid}", uuid);
@@ -381,6 +386,14 @@ std::string AddUserInfo(std::string str, std::string uuid, std::string user, std
   str = replace(str, "{first}", u.GetFirstName());
   str = replace(str, "{last}", u.GetLastName());
   str = replace(str, "{dob}", u.GetDOB());
+  str = replace(str, "{2fa}", u.Get2FA() ? "checked" : "");
+  if (str.find("[phones]") != std::string::npos) {
+    std::string buf = "";
+    for (int i = 0; i < u.GetPhoneNumbers().size(); i++) {
+      buf += "<div class=\"phone\"><input type=\"text\" placeholder=\"Phone Number\" value=\""+u.GetPhoneNumbers()[i]+"\">"+(i!=0?"<a class=\"remove\" onclick=\"removePhone(this)\"><img src=\"/remove.svg\"></a>":"")+"</div>";
+    }
+    str = replace(str, "[phones]", buf);
+  }
   std::vector<std::string> uuids = GetSessionUUIDs(getCookie(cookies, "session"));
   std::string userinfo = "<div class=\"profile\">\
                             <img src=\"/api/user/pfp?uuid="+uuid+"\">\

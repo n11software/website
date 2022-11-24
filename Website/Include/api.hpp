@@ -18,9 +18,11 @@ class UserInfo {
     std::string GetFirstName();
     std::string GetLastName();
     std::string GetDOB();
+    bool Get2FA();
     std::vector<std::string> GetPhoneNumbers();
   private:
     std::string uuid, email, password, firstname, lastname, DOB;
+    bool TwoFactor;
     std::vector<std::string> phonenumbers;
 };
 

@@ -121,6 +121,85 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
 }
 
+.wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.wrapper>div>.title {
+    font-size: 22px;
+    margin-bottom: 1rem;
+}
+
+.wrapper > .left {
+    display: flex;
+    padding-left: 2rem;
+    width: 100%;
+    flex-direction: column;
+}
+
+.wrapper > .right {
+    padding-left: 2rem;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+}
+
+.options {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+.label {
+    display: flex;
+    gap: 8px;
+}
+
+.twofa-info {
+    flex-direction: column;
+}
+
+.phones {
+    display: flex;
+    flex-direction: column;
+}
+
+.add {
+    width: fit-content;
+    padding: 0.25rem 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+    color: white;
+    background-color: black;
+}
+
+.phone {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+.phone>input {
+    border: none;
+    outline: none;
+    font-size: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    padding: 0.5rem;
+    background-color: #f8f8f8;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.remove>img {
+    width: 20px;
+}
+
 @media (max-width: 835px) {
     body {
         flex-direction: column;
