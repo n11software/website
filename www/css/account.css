@@ -161,3 +161,42 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .link.this {
     font-weight: 600;
 }
+
+@media (max-width: 510px) {
+    .link {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 425px) {
+    .link {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 390px) {
+    .link {
+        font-size: 14px;
+    }
+
+    .logo {
+        margin-right: 0rem;
+    }
+
+    .logo>svg {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+@media (max-width: 370px) {
+    .nav {
+        gap: 0.5rem;
+    }
+}
