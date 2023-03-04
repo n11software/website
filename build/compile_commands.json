@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/fire/N11/build",
+  "command": "/usr/bin/g++ -I/home/fire/N11/Include -fpic -pthread -L/usr/local/lib/ -g -o CMakeFiles/N11.dir/Source/N11.cpp.o -c /home/fire/N11/Source/N11.cpp",
+  "file": "/home/fire/N11/Source/N11.cpp"
+}
+]

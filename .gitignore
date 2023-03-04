@@ -14,3 +14,5 @@ package-lock.json
 Website/website
 db.txt
 2fa.txt
+
+*.pem
