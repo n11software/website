@@ -15,4 +15,6 @@ Website/website
 db.txt
 2fa.txt
 
+build/
+
 *.pem
