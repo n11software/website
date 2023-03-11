@@ -1,7 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/home/fire/website'
-mkdir -p Build
-g++ -c Source/main.cpp -std=c++2a -o Build/main.o
-g++  Build/main.o -std=c++2a -llink -pthread -o N11Website
-make: Leaving directory '/home/fire/website'
- 
