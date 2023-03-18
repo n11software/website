@@ -1,5 +1,6 @@
 #pragma once
 #include <Link.hpp>
+#include <json.hpp>
 
 class API {
     public:
@@ -7,3 +8,5 @@ class API {
     private:
         Link::Server* server;
 };
+
+nlohmann::json sql(std::string SQL);

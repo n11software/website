@@ -4,9 +4,10 @@
 #include <fstream>
 #include <API.hpp>
 #include <json.hpp>
+#include <User.hpp>
 
-#define PRODUCTION true
-#define CERT "certificate.pem"
+#define PRODUCTION false
+#define CERT "cert.pem"
 #define KEY "key.pem"
 
 void RedirectHTTPS(Link::Request* request, Link::Response* response) {
@@ -54,7 +55,7 @@ bool isLoggedIn(Link::Request* request, Link::Response* response, nlohmann::json
     Link::Client client(req);
     client.SetPort(8000);
     Link::Response* res = client.Send();
-    response->SetBody(res->GetBody());
+    std::cout << res->GetBody() << std::endl;
     json = nlohmann::json::parse(res->GetBody());
     if (json[0]["result"].empty()) return false;
     return true;
@@ -80,6 +81,12 @@ int main() {
         response->SetBody(content);
     });
 
+    server.Get("/signup", [](Link::Request* request, Link::Response* response) {
+        std::ifstream file("pages/signup.html");
+        std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        response->SetBody(content);
+    });
+
     server.Get("/login", [](Link::Request* request, Link::Response* response) {
         nlohmann::json json;
         bool loggedIn = isLoggedIn(request, response, json);
@@ -89,6 +96,11 @@ int main() {
         content = replace(content, "[ip]", request->GetIP());
         content = replace(content, "[user-agent]", loggedIn?std::string(json[0]["result"][0]["Location"]):request->GetHeader("User-Agent"));
         response->SetBody(content);
+    });
+
+    server.Get("/logout", [](Link::Request* request, Link::Response* response) {
+        response->SetHeader("Set-Cookie", "id=; expires=Thu, 01 Jan 1970 00:00:00 GMT");
+        response->SetStatus(302)->SetHeader("Location", "/login");
     });
 
     API api(&server);
@@ -105,6 +117,7 @@ int main() {
         server.SetPort(8080);
     #endif
 
+    server.EnableMultiThreaded();
     server.SetStartMessage("Server started on port " + std::to_string(server.GetPort()) + "!");
     server.Start();
     return 0;
