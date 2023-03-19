@@ -24,7 +24,7 @@ API::API(Link::Server* server) {
 }
 
 nlohmann::json sql(std::string SQL) {
-    Link::Request* req = new Link::Request("http://localhost/sql");
+    Link::Request* req = new Link::Request("http://localhost:8000/sql");
     req->SetMethod("POST");
     req->SetBody(SQL);
     req->SetRawHeader("Authorization", "Basic cm9vdDpyb290");
@@ -34,7 +34,6 @@ nlohmann::json sql(std::string SQL) {
     req->SetRawHeader("Content-Type", "application/text");
     req->SetRawHeader("Content-Length", std::to_string(req->GetBody().length()));
     Link::Client client(req);
-    client.SetPort(8000);
     Link::Response* res = client.Send();
     return nlohmann::json::parse(res->GetBody())[0]["result"];
 }

@@ -29,7 +29,7 @@ std::string replace(std::string data, std::string delimiter, std::string replace
 }
 
 bool isLoggedIn(Link::Request* request, Link::Response* response, nlohmann::json& json) {
-    Link::Request* req = new Link::Request("http://localhost/sql");
+    Link::Request* req = new Link::Request("http://localhost:8000/sql");
     req->SetMethod("POST");
     std::string id = request->GetCookie("id");
     if (id.empty()) return false;
@@ -53,7 +53,6 @@ bool isLoggedIn(Link::Request* request, Link::Response* response, nlohmann::json
     req->SetRawHeader("Content-Type", "application/text");
     req->SetRawHeader("Content-Length", std::to_string(req->GetBody().length()));
     Link::Client client(req);
-    client.SetPort(8000);
     Link::Response* res = client.Send();
     std::cout << res->GetBody() << std::endl;
     json = nlohmann::json::parse(res->GetBody());
@@ -117,8 +116,9 @@ int main() {
         server.SetPort(8080);
     #endif
 
-    server.EnableMultiThreaded();
+    server.EnableMultiThreading();
     server.SetStartMessage("Server started on port " + std::to_string(server.GetPort()) + "!");
+    server.EnableDebugging();
     server.Start();
     return 0;
 }
