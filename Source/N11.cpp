@@ -117,9 +117,9 @@ int main() {
         server.EnableDebugging();
     #endif
 
-    server.EnableMultiThreading();
-    server.EnableDebugging();
+    server.EnableMultiThreaded();
     server.SetStartMessage("Server started on port " + std::to_string(server.GetPort()) + "!");
+    server.EnableDebugging();
     server.Start();
     return server.Status;
 }
