@@ -93,7 +93,7 @@ int main() {
         std::ifstream file("pages/login.html");
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         content = replace(content, "[ip]", request->GetIP());
-        content = replace(content, "[user-agent]", loggedIn?std::string(json[0]["result"][0]["Location"]):request->GetHeader("User-Agent"));
+        content = replace(content, "[user-agent]", loggedIn?std::string(json[0]["result"][0]["Location"]):request->GetRawHeader("User-Agent").substr(request->GetRawHeader("User-Agent").find(": ")+2));
         response->SetBody(content);
     });
 
@@ -117,7 +117,7 @@ int main() {
         server.EnableDebugging();
     #endif
 
-    server.EnableMultiThreaded();
+    server.EnableMultiThreading();
     server.SetStartMessage("Server started on port " + std::to_string(server.GetPort()) + "!");
     server.EnableDebugging();
     server.Start();
