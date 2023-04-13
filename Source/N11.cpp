@@ -6,10 +6,6 @@
 #include <json.hpp>
 #include <User.hpp>
 
-#define PRODUCTION false
-#define CERT "cert.pem"
-#define KEY "key.pem"
-
 void RedirectHTTPS(Link::Request* request, Link::Response* response, Link::Server* server) {
     response->SetStatus(301)->SetHeader("Location", "https://" + request->GetHeader("Host") + request->GetPath())->Close();
 }
@@ -65,7 +61,7 @@ bool isLoggedIn(Link::Request* request, Link::Response* response) {
     return isLoggedIn(request, response, json);
 }
 
-int main() {
+int main(int argc, char** argv) {
     Link::Server server;
 
     server.SetStaticPages("public/");
@@ -108,18 +104,30 @@ int main() {
         response->SetStatus(404)->SetBody("404 Not Found");
     });
 
-    #if PRODUCTION == true
-        server.EnableSSL(CERT, KEY);
+    std::string cert, key;
+    bool ssl = false;
+
+    if (argc > 1) {
+        for (int i = 0; i < argc; i++) {
+            if (std::string(argv[i]) == "-ssl" && argc > i+2) {
+                ssl = true;
+                cert = argv[i+1];
+                key = argv[i+2];
+            }
+        }
+    }
+
+    if (ssl) {
+        server.EnableSSL(cert, key);
         std::thread http(HTTPThread);
         http.detach();
-    #else
+    } else {
         server.SetPort(8080);
         server.EnableDebugging();
-    #endif
+    }
 
     server.EnableMultiThreading();
     server.SetStartMessage("Server started on port " + std::to_string(server.GetPort()) + "!");
-    server.EnableDebugging();
     server.Start();
     return server.Status;
 }
