@@ -1,7 +1,7 @@
-@import url('https://n11.dev/fonts/jbm.css');
+@import url('/fonts/jbm.css');
 
 /* Theming */
-:root {
+.dark {
   --background: black;
   --foreground: #19191a;
   --font-primary: white;
@@ -12,7 +12,7 @@
   --button-disabled: #141414;
 }
 
-/* :root {
+.light {
   --background: white;
   --foreground: #f0f0f0;
   --font-primary: black;
@@ -21,7 +21,7 @@
   --button-primary: black;
   --button-secondary: #ddd;
   --button-disabled: #c0c0c0;
-} */
+}
 
 /* General */
 * {

@@ -73,12 +73,14 @@ int main(int argc, char** argv) {
         }
         std::ifstream file("pages/index.html");
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
         response->SetBody(content);
     });
 
     server.Get("/signup", [](Link::Request* request, Link::Response* response) {
         std::ifstream file("pages/signup.html");
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
         response->SetBody(content);
     });
 
@@ -88,6 +90,7 @@ int main(int argc, char** argv) {
         std::string id = request->GetCookie("id");
         std::ifstream file("pages/login.html");
         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        file.close();
         content = replace(content, "[ip]", request->GetIP());
         content = replace(content, "[user-agent]", loggedIn?std::string(json[0]["result"][0]["Location"]):request->GetRawHeader("User-Agent").substr(request->GetRawHeader("User-Agent").find(": ")+2));
         response->SetBody(content);

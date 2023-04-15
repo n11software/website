@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="white">
     <title>Login</title>
   </head>
   <body>
@@ -34,5 +35,22 @@
         <a class="button">Next</a>
       </div>
     </div>
+    <!-- Theme Handler -->
+    <script>
+      let themeHandler = () => {
+        let isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+        if (isDark) {
+          document.body.classList.add("dark")
+          document.body.classList.remove("light")
+          document.querySelector("meta[name='theme-color']").setAttribute("content", "black")
+        } else {
+          document.body.classList.remove("dark")
+          document.body.classList.add("light")
+          document.querySelector("meta[name='theme-color']").setAttribute("content", "white")
+        }
+      }
+      window.addEventListener("load", themeHandler)
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", themeHandler)
+    </script>
   </body>
 </html>
