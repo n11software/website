@@ -148,7 +148,7 @@ div.input>input {
 }
 
 div.input>svg {
-  min-width: 18pt;
+  max-width: 18pt;
 }
 
 /* Spinner */
