@@ -1,337 +1,176 @@
-@import url('/fonts/jbm.css');
+@import url('https://n11.dev/fonts/jbm.css');
+
+/* Theming */
+:root {
+  --background: black;
+  --foreground: #19191a;
+  --font-primary: white;
+  --font-secondary: black;
+  --font-disabled: #aaa;
+  --button-primary: white;
+  --button-secondary: #242424;
+  --button-disabled: #141414;
+}
+
+/* :root {
+  --background: white;
+  --foreground: #f0f0f0;
+  --font-primary: black;
+  --font-secondary: white;
+  --font-disabled: #888;
+  --button-primary: black;
+  --button-secondary: #ddd;
+  --button-disabled: #c0c0c0;
+} */
+
+/* General */
+* {
+  margin: 0;
+  user-select: none;
+  cursor: normal;
+}
 
 body {
-  background-color: #ebecf0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  margin: 0;
-  font-family: 'JetBrains Mono', monospace;
+  background-color: var(--background);
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  max-width: 100vw;
 }
 
-.login {
-  color: #ffffff;
-  background-color: #000000;
+body>div.center {
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--foreground);
+  color: var(--font-primary);
+  font-family: 'JetBrains Mono', monospace;
+  padding: 1.5rem;
+  border-radius: 5px;
+  gap: 1rem;
+  width: 20rem;
+}
+
+/* Title */
+span.title {
+  font-size: 14pt;
+}
+
+/* Buttons */
+div.buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+div.buttons>a.button {
+  width: 100%;
+  flex: 1;
+}
+
+a.button {
+  background-color: var(--button-primary);
+  color: var(--font-secondary);
   padding: 0.5rem 2rem;
   border-radius: 5px;
-  text-decoration: none;
-  position: absolute;
-  font-family: 'JetBrains Mono', monospace;
-  top: 1rem;
-  right: 1rem;
-}
-
-.center {
-  background-color: white;
-  box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  padding: 40px 30px;
-  border-radius: 10px;
-  width: 300px;
-}
-
-@media (max-width: 768px) {
-  .center {
-    padding: 0;
-    border-radius: 0;
-    background-color: transparent;
-    box-shadow: none;
-  }
-}
-
-.titles {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.titles > .input-title {
-  width: 100%;
-}
-
-.input-title {
-  font-size: 14px;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: #252b35;
-  user-select: none;
-}
-
-.title {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 24px;
-  user-select: none;
-  text-align: center;
-}
-
-.input, .input-name {
-  border: 1px solid #e3e4e8;
-  border-radius: 7px;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: 5px;
-}
-
-.new-input {
-  margin-right: 10px;
-}
-
-.input > input, .input-name > input {
-  border: none;
-  background-color: transparent;
-  font-size: 18px;
-  color: #393f48;
-  padding: 5px 10px;
-  border-radius: 7px;
-  width: 100%;
-  outline: none;
-}
-
-.input-name > input {
-  border: 1px solid #e3e4e8;
-}
-
-.input-name {
-  border: none;
-}
-
-.input > svg.error, .input > svg.success {
-  height: 30px;
-  fill: black;
-  margin-right: 5px;
-}
-
-.input > svg.error-pass, .input > svg.success-pass {
-  height: 30px;
-  fill: black;
-  margin-right: 5px;
-}
-
-.forgot {
-  color: #747b87;
-  text-decoration: underline;
-  text-align: right;
-  margin-bottom: 8px;
-}
-
-.byo {
-  color: #747b87;
-  text-align: center;
-  font-size: 14px;
-}
-
-.byo > a {
-  color: black;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.button-secondary {
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 7px;
-  padding: 5px;
-  color: #252b35;
   text-align: center;
   cursor: pointer;
-  border: 1px solid #e3e4e8;
-  border-radius: 7px;
-  flex: 1;
-  user-select: none;
 }
 
-.button {
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
-  background-color: black;
-  border-radius: 7px;
-  padding: 5px;
-  text-align: center;
-  cursor: pointer;
-  flex: 1;
-  user-select: none;
+a.button.secondary {
+  background-color: var(--button-secondary);
+  color: var(--font-primary)
 }
 
-@media (max-width: 768px) {
-  .input {
-    background-color: white;
-  }
-
-  .button-secondary {
-    background-color: white;
-  }
-}
-
-.button[disabled] {
-  background-color: #e3e4e8;
-  color: #747b87;
+a.button.disabled {
+  background-color: var(--button-disabled);
+  color: var(--font-disabled);
   cursor: not-allowed;
 }
 
-.buttons {
-  user-select: none;
-  margin-top: 8px;
-  display: flex;
-  width: 100%;
-  gap: 10px;
-}
-
-.signup {
-  user-select: none;
-  font-size: 16px;
-  font-weight: 500;
-  color: #747b87;
-  text-align: center;
-  margin-top: 8px;
-}
-
-.signup > a {
-  color: black;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-span.error {
-  display: none;
-  color: red;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.account, .select {
-  background-color: white;
-  font-size: 18px;
-  color: #393f48;
-  padding: 10px;
-  outline: none;
-  gap: 15px;
-  border: 1px solid #e3e4e8;
-  border-radius: 7px;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  user-select: none;
-  cursor: pointer;
-}
-
-.select > svg {
-  width: 30px;
-  height: 30px;
-  margin-right: 15px;
-  color: #252b35;
-}
-
-.select > span {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  width: 80%;
-}
-
-.account > img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.account > .info {
+/* Account List */
+div.account-list {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width: 100%;
+  gap: 0.5rem;
 }
 
-.account > .info > .name, .account > .info > .email {
-  font-size: 14px;
-  font-weight: 600;
-  color: #252b35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  width: 80%;
-}
-
-.account > .info > .email {
-  font-size: 12px;
-  font-weight: 500;
-  color: #747b87;
-}
-
-.check-code {
-  font-size: 16px;
-  font-weight: 600;
-  color: #252b35;
-  margin-top: 8px;
-  user-select: none;
-}
-
-.sent-code {
-  font-size: 14px;
-  font-weight: 500;
-  color: #747b87;
-  margin-bottom: 16px;
-  user-select: none;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] {
-  -moz-appearance: textfield;
-}
-
-.code-fa-wrapper {
+div.account-list>div.account {
   display: flex;
-  width: 100%;
   align-items: center;
-  justify-content: center;
-}
-
-.code-fa {
-  width: 100%;
-  height: 40px;
-  color: #393f48;
-  margin-right: 5px;
-  margin-left: 5px;
-  text-align: center;
-  background-color: white;
-  font-size: 32px;
-  color: #393f48;
-  padding: 10px;
-  outline: none;
-  border: 1px solid #e3e4e8;
-  border-radius: 7px;
-  margin-bottom: 6px;
-}
-
-.resend-code {
-  font-size: 16px;
-  font-weight: 500;
-  color: #747b87;
-  text-align: center;
-  margin-top: 8px;
-  margin-bottom: 8px;
-  user-select: none;
-}
-
-.resend-code > a {
-  color: black;
-  text-decoration: underline;
+  gap: 1.5rem;
+  background-color: var(--button-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.hidden {
-  display: none;
+div.account-list>div.account>img {
+  width: 50px;
+  pointer-events: none;
+}
+
+div.account-list>div.account>div.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+div.account>div.info>span.name {
+  font-size: 12pt;
+  font-weight: bold;
+}
+
+div.account>div.info>span.email {
+  font-size: 11pt;
+}
+
+/* Inputs */
+div.input {
+  display: flex;
+  background-color: var(--button-secondary);
+  gap: 1rem;
+  color: var(--font-primary);
+  font-size: 14pt;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+}
+
+div.input>input {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--font-primary);
+  font-size: 14pt;
+}
+
+div.input>svg {
+  min-width: 18pt;
+}
+
+/* Spinner */
+@keyframes spinner {
+  to {transform: rotate(360deg);}
+}
+
+.spinner {
+  position: relative;
+  width: 20px;
+}
+
+.spinner:before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border-radius: 50%;
+  border-top: 2px solid var(--button-primary);
+  border-right: 2px solid transparent;
+  animation: spinner .6s linear infinite;
 }
